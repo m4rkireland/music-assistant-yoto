@@ -19,6 +19,7 @@ CONF_REFRESH_TOKEN = "refresh_token"
 CONF_AUTH_COMPLETE = "auth_complete"
 CONF_ACTION_AUTH = "authenticate"
 CONF_ACTION_VERIFY = "verify_callback"
+CONF_AUTH_URL = "authorization_url"
 CONF_CALLBACK_URL = "callback_url"
 CONF_PKCE_PENDING = "pkce_pending"
 REDIRECT_URI = "http://localhost:8095/callback"
@@ -56,6 +57,7 @@ async def get_config_entries(
             _PKCE_SESSIONS.pop(next(iter(_PKCE_SESSIONS)))
         _PKCE_SESSIONS[session_id] = authorization.verifier
         values[CONF_PKCE_PENDING] = True
+        values[CONF_AUTH_URL] = authorization.url
         values[CONF_CALLBACK_URL] = ""
         values[CONF_AUTH_COMPLETE] = False
         mass.signal_event(EventType.AUTH_SESSION, session_id, authorization.url)
@@ -78,6 +80,7 @@ async def get_config_entries(
         values[CONF_REFRESH_TOKEN] = token.refresh_token
         values[CONF_AUTH_COMPLETE] = True
         values[CONF_PKCE_PENDING] = False
+        values[CONF_AUTH_URL] = ""
         values[CONF_CALLBACK_URL] = ""
         _PKCE_SESSIONS.pop(session_id, None)
 
@@ -121,6 +124,16 @@ async def get_config_entries(
             required=pending_callback,
             hidden=not pending_callback,
             value=values.get(CONF_CALLBACK_URL),
+        ),
+        ConfigEntry(
+            key=CONF_AUTH_URL,
+            type=ConfigEntryType.STRING,
+            label="Yoto authorization URL",
+            description="Open this URL if the authorization window did not appear.",
+            required=False,
+            hidden=not pending_callback,
+            read_only=True,
+            value=values.get(CONF_AUTH_URL),
         ),
         ConfigEntry(
             key=CONF_ACTION_VERIFY,

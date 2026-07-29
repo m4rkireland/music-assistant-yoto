@@ -10,6 +10,7 @@ from music_assistant_models.errors import LoginFailed
 from yoto import (
     CONF_ACTION_AUTH,
     CONF_ACTION_VERIFY,
+    CONF_AUTH_URL,
     CONF_CALLBACK_URL,
     CONF_CLIENT_ID,
     CONF_PKCE_PENDING,
@@ -92,6 +93,8 @@ async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
     assert values[CONF_PKCE_PENDING]
     assert "fixture-client-id" in events[0][2]
     assert "family%3Alibrary%3Aview" in events[0][2]
+    assert by_key[CONF_AUTH_URL].read_only
+    assert by_key[CONF_AUTH_URL].value == events[0][2]
     assert not by_key[CONF_CALLBACK_URL].hidden
     assert by_key[CONF_CALLBACK_URL].required
     assert not by_key[CONF_ACTION_VERIFY].hidden
