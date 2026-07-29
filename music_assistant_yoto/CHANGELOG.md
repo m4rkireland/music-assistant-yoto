@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.9-yoto.4
+
+- Remove the unreliable browser-push authentication event.
+- Present a selectable, mobile-friendly authorization URL with copy guidance
+  and a direct native help link.
+
 ## 2.9.9-yoto.3
 
 - Open the Yoto authorization page from the setup action using Music
