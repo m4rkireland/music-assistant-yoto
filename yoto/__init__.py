@@ -11,11 +11,10 @@ from music_assistant_models.errors import LoginFailed
 from .client import YotoAdapter
 
 if TYPE_CHECKING:
-    from music_assistant_models.config_entries import ConfigValueType, ProviderConfig
-    from music_assistant_models.provider import ProviderManifest
-
     from music_assistant.mass import MusicAssistant
     from music_assistant.models import ProviderInstanceType
+    from music_assistant_models.config_entries import ConfigValueType, ProviderConfig
+    from music_assistant_models.provider import ProviderManifest
 
 CONF_CLIENT_ID = "client_id"
 CONF_REFRESH_TOKEN = "refresh_token"

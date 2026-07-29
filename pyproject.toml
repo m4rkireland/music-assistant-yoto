@@ -31,4 +31,6 @@ select = ["E", "F", "I", "UP", "B", "ASYNC", "RUF"]
 [tool.mypy]
 python_version = "3.14"
 strict = true
+ignore_missing_imports = true
+disallow_subclassing_any = false
 packages = ["yoto"]

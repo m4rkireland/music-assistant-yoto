@@ -18,6 +18,7 @@ class CatalogueTrack:
     chapter_key: str
     track_key: str
     title: str
+    chapter_title: str | None
     duration: int
     chapter_number: int
     track_number: int
@@ -99,8 +100,7 @@ class Catalogue:
             ids = tuple(
                 card_id
                 for item in raw_group.get("items", [])
-                if isinstance(item, Mapping)
-                and (card_id := _text(_child(item, "contentId")))
+                if isinstance(item, Mapping) and (card_id := _text(_child(item, "contentId")))
             )
             group_records[group_id] = CatalogueGroup(
                 item_id=group_id,
@@ -109,6 +109,54 @@ class Catalogue:
                 artwork=_optional_text(_child(raw_group, "imageUrl")),
             )
         return cls(card_records, group_records)
+
+    @classmethod
+    def from_yoto_models(cls, library: Mapping[str, Any], groups: Mapping[str, Any]) -> Catalogue:
+        """Build a URL-free snapshot from yoto-api model objects."""
+        cards: dict[str, CatalogueCard] = {}
+        for card_id, card in library.items():
+            tracks: list[CatalogueTrack] = []
+            for chapter_number, chapter in enumerate(card.chapters.values(), 1):
+                for track in chapter.tracks.values():
+                    if getattr(track, "type", None) not in (None, "audio"):
+                        continue
+                    tracks.append(
+                        CatalogueTrack(
+                            item_id=encode_track_id(card_id, chapter.key, track.key),
+                            card_id=card_id,
+                            chapter_key=chapter.key,
+                            track_key=track.key,
+                            title=track.title or track.key,
+                            chapter_title=chapter.title,
+                            duration=track.duration or 0,
+                            chapter_number=chapter_number,
+                            track_number=len(tracks) + 1,
+                            format=track.format,
+                            channels=track.channels,
+                            artwork=track.icon or chapter.icon,
+                        )
+                    )
+            cards[card_id] = CatalogueCard(
+                item_id=card_id,
+                title=card.title or card_id,
+                description=card.description,
+                author=card.author,
+                category=card.category,
+                artwork=card.cover_image_large,
+                series_title=card.series_title,
+                series_order=card.series_order,
+                tracks=tuple(tracks),
+            )
+        catalogue_groups = {
+            group_id: CatalogueGroup(
+                item_id=group_id,
+                name=group.name or group_id,
+                card_ids=tuple(group.card_ids),
+                artwork=group.image_url,
+            )
+            for group_id, group in groups.items()
+        }
+        return cls(cards, catalogue_groups)
 
     def find_track(self, item_id: str) -> CatalogueTrack | None:
         """Find one track by stable provider ID."""
@@ -135,8 +183,10 @@ def decode_track_id(item_id: str) -> tuple[str, str, str]:
         values = json.loads(payload)
     except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as err:
         raise ValueError("Invalid Yoto track ID") from err
-    if not isinstance(values, list) or len(values) != 3 or not all(
-        isinstance(value, str) and value for value in values
+    if (
+        not isinstance(values, list)
+        or len(values) != 3
+        or not all(isinstance(value, str) and value for value in values)
     ):
         raise ValueError("Invalid Yoto track ID")
     return values[0], values[1], values[2]
@@ -158,6 +208,7 @@ def _parse_tracks(card_id: str, detail: Mapping[str, Any]) -> tuple[CatalogueTra
         chapter_artwork = _optional_text(
             _child(_mapping(_child(raw_chapter, "display")), "icon16x16")
         )
+        chapter_title = _optional_text(_child(raw_chapter, "title"))
         raw_tracks = raw_chapter.get("tracks", [])
         if not isinstance(raw_tracks, list):
             continue
@@ -174,6 +225,7 @@ def _parse_tracks(card_id: str, detail: Mapping[str, Any]) -> tuple[CatalogueTra
                     chapter_key=chapter_key,
                     track_key=track_key,
                     title=_text(_child(raw_track, "title")) or track_key,
+                    chapter_title=chapter_title,
                     duration=_optional_int(_child(raw_track, "duration")) or 0,
                     chapter_number=chapter_number,
                     track_number=len(result) + 1,

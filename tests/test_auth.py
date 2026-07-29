@@ -102,9 +102,7 @@ async def test_missing_credentials_and_invalid_refresh_are_login_failures() -> N
         async def check_and_refresh_token(self) -> FakeToken:
             raise RuntimeError("invalid refresh_token=fixture-secret")
 
-    adapter = YotoAdapter(
-        "fixture-client-id", refresh_token="fixture-secret", api=BrokenClient()
-    )
+    adapter = YotoAdapter("fixture-client-id", refresh_token="fixture-secret", api=BrokenClient())
     with pytest.raises(LoginFailed, match="authentication failed") as err:
         await adapter.ensure_authenticated()
     assert "fixture-secret" not in str(err.value)

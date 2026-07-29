@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 
 import pytest
+from yoto_api import Card, Chapter, Group, Track
 
 from yoto.catalogue import Catalogue, decode_track_id, encode_track_id
-
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -54,3 +54,30 @@ def test_decode_track_id_rejects_malformed_ids(item_id: str) -> None:
 def test_catalogue_rejects_malformed_library_response() -> None:
     with pytest.raises(ValueError, match="cards list"):
         Catalogue.from_responses({}, {})
+
+
+def test_catalogue_from_yoto_models_preserves_metadata_and_drops_stream_url() -> None:
+    track = Track(
+        key="track-a",
+        title="Moshi Track",
+        duration=12,
+        format="aac",
+        trackUrl="https://secure-media.example/file?signature=fixture",
+    )
+    chapter = Chapter(key="chapter-a", title="Sleep", tracks={"track-a": track})
+    card = Card(
+        id="card-a",
+        title="Moshi",
+        author="Dream Reader",
+        cover_image_large="fixture-art",
+        series_title="Moshi Series",
+        chapters={"chapter-a": chapter},
+    )
+    group = Group(id="sleep", name="Sleep", card_ids=["card-a"])
+
+    catalogue = Catalogue.from_yoto_models({"card-a": card}, {"sleep": group})
+
+    assert catalogue.cards["card-a"].series_title == "Moshi Series"
+    assert catalogue.cards["card-a"].tracks[0].chapter_title == "Sleep"
+    assert catalogue.groups["sleep"].card_ids == ("card-a",)
+    assert "signature=" not in repr(catalogue)

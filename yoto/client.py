@@ -10,7 +10,7 @@ from typing import Any, Protocol
 from music_assistant_models.errors import LoginFailed, ProviderUnavailableError
 from yoto_api import YotoClient
 
-from .catalogue import Catalogue
+from .catalogue import Catalogue, decode_track_id
 
 TokenCallback = Callable[[str], None | Awaitable[None]]
 
@@ -43,6 +43,15 @@ class DeviceAuthEvent:
 
     url: str
     session: dict[str, Any] = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedStream:
+    """A fresh stream URL kept out of representations and catalogue records."""
+
+    path: str = field(repr=False)
+    duration: int = 0
+    format: str | None = None
 
 
 class YotoAdapter:
@@ -127,6 +136,30 @@ class YotoAdapter:
             return Catalogue.from_yoto_models(self._api.library, self._api.groups)
         except Exception as err:
             raise ProviderUnavailableError("Unable to refresh the Yoto library") from err
+
+    async def resolve_stream(self, item_id: str) -> ResolvedStream:
+        """Refetch one card and return its current signed stream."""
+        try:
+            card_id, chapter_key, track_key = decode_track_id(item_id)
+        except ValueError as err:
+            raise ProviderUnavailableError("Invalid Yoto track identifier") from err
+        await self.ensure_authenticated()
+        try:
+            await self._api.update_card_detail(card_id)
+            card = self._api.library[card_id]
+            track = card.chapters[chapter_key].tracks[track_key]
+            path = track.trackUrl
+            if not isinstance(path, str) or not path.startswith("https://"):
+                raise ProviderUnavailableError("Yoto stream is unavailable")
+            return ResolvedStream(
+                path=path,
+                duration=track.duration or 0,
+                format=track.format,
+            )
+        except ProviderUnavailableError:
+            raise
+        except Exception as err:
+            raise ProviderUnavailableError("Yoto stream is unavailable") from err
 
     async def _persist_token(self, refresh_token: str) -> None:
         self._refresh_token = refresh_token
