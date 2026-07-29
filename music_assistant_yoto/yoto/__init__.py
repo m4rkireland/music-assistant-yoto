@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from music_assistant_models.config_entries import ConfigEntry, ConfigValueType, ProviderConfig
-from music_assistant_models.enums import ConfigEntryType
+from music_assistant_models.enums import ConfigEntryType, EventType
 
 from .pkce import build_authorization, exchange_code
 from .provider import YotoProvider
@@ -60,6 +60,7 @@ async def get_config_entries(
         values[CONF_AUTH_URL] = authorization.url
         values[CONF_CALLBACK_URL] = ""
         values[CONF_AUTH_COMPLETE] = False
+        mass.signal_event(EventType.AUTH_SESSION, session_id, authorization.url)
 
     if action == CONF_ACTION_VERIFY:
         if mass is None:
@@ -147,9 +148,9 @@ async def get_config_entries(
             key=CONF_ACTION_AUTH,
             type=ConfigEntryType.ACTION,
             label=(
-                "Generate a new Yoto authorization URL"
+                "Open a new Yoto authorization page"
                 if authenticated
-                else "Generate Yoto authorization URL"
+                else "Open Yoto authorization page"
             ),
             action=CONF_ACTION_AUTH,
             required=False,

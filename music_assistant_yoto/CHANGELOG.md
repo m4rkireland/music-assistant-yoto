@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.9-yoto.3
+
+- Open the Yoto authorization page from the setup action using Music
+  Assistant's native browser-auth event.
+- Keep the generated URL visible as a copy/paste fallback.
+
 ## 2.9.9-yoto.2
 
 - Flush single-use rotated Yoto refresh tokens to encrypted Music Assistant

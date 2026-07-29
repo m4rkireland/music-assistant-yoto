@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from music_assistant_models.enums import ConfigEntryType
+from music_assistant_models.enums import ConfigEntryType, EventType
 from music_assistant_models.errors import LoginFailed
 
 from yoto import (
@@ -78,8 +78,11 @@ async def test_config_schema_warns_and_keeps_refresh_token_secure() -> None:
 
 @pytest.mark.asyncio
 async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
+    events: list[tuple[object, ...]] = []
+
     class FakeMass:
-        pass
+        def signal_event(self, *args: object) -> None:
+            events.append(args)
 
     values: dict[str, Any] = {
         CONF_CLIENT_ID: "fixture-client-id",
@@ -93,11 +96,12 @@ async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
     assert "fixture-client-id" in str(by_key[CONF_AUTH_URL].value)
     assert "family%3Alibrary%3Aview" in str(by_key[CONF_AUTH_URL].value)
     assert not by_key[CONF_AUTH_URL].read_only
-    assert "generate" in by_key[CONF_ACTION_AUTH].label.lower()
+    assert "open" in by_key[CONF_ACTION_AUTH].label.lower()
     assert not by_key[CONF_CALLBACK_URL].hidden
     assert not by_key[CONF_CALLBACK_URL].required
     assert not by_key[CONF_ACTION_VERIFY].hidden
     assert keys.index(CONF_AUTH_URL) < keys.index(CONF_CALLBACK_URL)
+    assert events == [(EventType.AUTH_SESSION, "fixture-session", values[CONF_AUTH_URL])]
     assert "fixture-verifier" not in repr(entries)
 
 
