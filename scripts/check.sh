@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 MA_SERVER=${MA_SERVER:-/home/dave/work/music-assistant-yoto-reference/server}
 VENV=${VENV:-$ROOT/.venv}
+RUNTIME_VENV=${RUNTIME_VENV:-$MA_SERVER/.venv-yoto-isolated}
 
 if [[ ! -f "$MA_SERVER/music_assistant/models/music_provider.py" ]]; then
   echo "Music Assistant source not found at $MA_SERVER" >&2
@@ -21,7 +22,12 @@ fi
 "$VENV/bin/mypy" "$ROOT/yoto"
 "$VENV/bin/pytest" -q "$ROOT/tests"
 
-PYTHONPATH="$MA_SERVER" "$VENV/bin/python" - <<'PY'
+if [[ ! -x "$RUNTIME_VENV/bin/python" ]]; then
+  echo "Complete Music Assistant runtime venv not found at $RUNTIME_VENV" >&2
+  exit 1
+fi
+
+PYTHONPATH="$ROOT:$MA_SERVER" "$RUNTIME_VENV/bin/python" - <<'PY'
 import importlib
 import json
 from pathlib import Path
