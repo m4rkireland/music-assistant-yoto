@@ -21,6 +21,21 @@
 - Setup displayed the unofficial warning, required Yoto OAuth client-ID field, and authorization action.
 - No production Music Assistant add-on file/config was edited or restarted.
 
-## Pending authorization gate
+## Live-account verification
 
-Real provider loading and library synchronization require a Yoto developer client ID followed by browser authorization. After authorization, verify card/track totals, group browse, `Moshi` search results, artwork/order/durations, token rotation, and fresh stream resolution before any audible or production test.
+Completed on 2026-07-29 against the isolated instance:
+
+- Browser Authorization Code + PKCE completed with `family:library:view` and `offline_access`.
+- Music Assistant loaded the real Yoto provider and imported 676 tracks.
+- Card and track artwork rendered in Music Assistant.
+- Search for `Moshi` returned the cards `Moshi: Bedtime with Moshi` and `Close Your Eyes`.
+- The Moshi results included ordered tracks such as `Bobo the Lullaby Llama`, `Buster's Sleepy Egg Hunt`, `Close Your Eyes Sleepy Paws`, `Dawdles the Twiilight Tortoise`, `Jeepers Brings the Nightime Ease`, `Night Swimming with Yawnsy`, `Nodkins Goes Dream Hopping`, and `Wuzzle's Windchime Wood`.
+- Restarting the isolated Music Assistant server loaded Yoto again without browser authorization, confirming persisted refresh authentication.
+- A real `Bobo the Lullaby Llama` stream resolved in 173 ms. Music Assistant detected AAC at 44.1 kHz/128 kb/s and received its first audio chunk after 0.18 seconds.
+- Log and settings scans found no access token, refresh token, or signed stream URL text.
+
+## Deferred audible playback
+
+The approved Kitchen Sonos test reached stream resolution and decoding, but the Sonos returned `ERROR_PLAYBACK_NO_CONTENT`. The isolated stream relay is `192.168.100.33:8097` while Kitchen is `192.168.20.76`; the host firewall is open, but the Sonos VLAN cannot initiate the relay fetch. Kitchen remained idle.
+
+The audible retry is deferred. It requires either a narrow temporary allowance from `192.168.20.76` to `192.168.100.33` TCP 8097 or an isolated Music Assistant host reachable from the Sonos VLAN. Production deployment remains blocked until this test is completed or the user explicitly changes that requirement.
