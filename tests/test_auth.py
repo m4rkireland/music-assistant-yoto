@@ -77,11 +77,8 @@ async def test_config_schema_warns_and_keeps_refresh_token_secure() -> None:
 
 @pytest.mark.asyncio
 async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
-    events: list[tuple[Any, ...]] = []
-
     class FakeMass:
-        def signal_event(self, *args: Any) -> None:
-            events.append(args)
+        pass
 
     values: dict[str, Any] = {
         CONF_CLIENT_ID: "fixture-client-id",
@@ -91,10 +88,10 @@ async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
     by_key = {entry.key: entry for entry in entries}
 
     assert values[CONF_PKCE_PENDING]
-    assert "fixture-client-id" in events[0][2]
-    assert "family%3Alibrary%3Aview" in events[0][2]
-    assert by_key[CONF_AUTH_URL].read_only
-    assert by_key[CONF_AUTH_URL].value == events[0][2]
+    assert "fixture-client-id" in str(by_key[CONF_AUTH_URL].value)
+    assert "family%3Alibrary%3Aview" in str(by_key[CONF_AUTH_URL].value)
+    assert not by_key[CONF_AUTH_URL].read_only
+    assert "generate" in by_key[CONF_ACTION_AUTH].label.lower()
     assert not by_key[CONF_CALLBACK_URL].hidden
     assert not by_key[CONF_CALLBACK_URL].required
     assert not by_key[CONF_ACTION_VERIFY].hidden

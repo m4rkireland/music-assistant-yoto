@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from music_assistant_models.config_entries import ConfigEntry, ConfigValueType, ProviderConfig
-from music_assistant_models.enums import ConfigEntryType, EventType
+from music_assistant_models.enums import ConfigEntryType
 
 from .pkce import build_authorization, exchange_code
 from .provider import YotoProvider
@@ -60,7 +60,6 @@ async def get_config_entries(
         values[CONF_AUTH_URL] = authorization.url
         values[CONF_CALLBACK_URL] = ""
         values[CONF_AUTH_COMPLETE] = False
-        mass.signal_event(EventType.AUTH_SESSION, session_id, authorization.url)
 
     if action == CONF_ACTION_VERIFY:
         if mass is None:
@@ -109,7 +108,8 @@ async def get_config_entries(
             key="pkce_instructions",
             type=ConfigEntryType.ALERT,
             label=(
-                "Open Yoto authorization and sign in on Yoto's site. The final localhost page "
+                "Copy the generated authorization URL into a new browser tab and sign in on "
+                "Yoto's site. The final localhost page "
                 "will normally fail to load; copy its complete URL from the browser address bar, "
                 "paste it below, then verify."
             ),
@@ -128,11 +128,11 @@ async def get_config_entries(
         ConfigEntry(
             key=CONF_AUTH_URL,
             type=ConfigEntryType.STRING,
-            label="Yoto authorization URL",
-            description="Open this URL if the authorization window did not appear.",
+            label="Generated Yoto authorization URL (copy into a new browser tab)",
+            description="Copy this complete URL and open it in a new browser tab.",
             required=False,
             hidden=not pending_callback,
-            read_only=True,
+            read_only=False,
             value=values.get(CONF_AUTH_URL),
         ),
         ConfigEntry(
@@ -146,7 +146,11 @@ async def get_config_entries(
         ConfigEntry(
             key=CONF_ACTION_AUTH,
             type=ConfigEntryType.ACTION,
-            label="Reauthorize Yoto" if authenticated else "Open Yoto authorization",
+            label=(
+                "Generate a new Yoto authorization URL"
+                if authenticated
+                else "Generate Yoto authorization URL"
+            ),
             action=CONF_ACTION_AUTH,
             required=False,
         ),
