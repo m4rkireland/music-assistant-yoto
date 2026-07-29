@@ -117,15 +117,6 @@ async def get_config_entries(
             hidden=not pending_callback,
         ),
         ConfigEntry(
-            key=CONF_CALLBACK_URL,
-            type=ConfigEntryType.STRING,
-            label="Complete Yoto callback URL",
-            description="It starts with http://localhost:8095/callback?code=",
-            required=False,
-            hidden=not pending_callback,
-            value=values.get(CONF_CALLBACK_URL),
-        ),
-        ConfigEntry(
             key=CONF_AUTH_URL,
             type=ConfigEntryType.STRING,
             label="Generated Yoto authorization URL (copy into a new browser tab)",
@@ -134,6 +125,15 @@ async def get_config_entries(
             hidden=not pending_callback,
             read_only=False,
             value=values.get(CONF_AUTH_URL),
+        ),
+        ConfigEntry(
+            key=CONF_CALLBACK_URL,
+            type=ConfigEntryType.STRING,
+            label="Complete Yoto callback URL",
+            description="It starts with http://localhost:8095/callback?code=",
+            required=False,
+            hidden=not pending_callback,
+            value=values.get(CONF_CALLBACK_URL),
         ),
         ConfigEntry(
             key=CONF_ACTION_VERIFY,

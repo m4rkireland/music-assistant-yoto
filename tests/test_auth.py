@@ -18,6 +18,7 @@ from yoto import (
     get_config_entries,
 )
 from yoto.client import YotoAdapter
+from yoto.provider import YotoProvider
 
 
 @dataclass
@@ -86,6 +87,7 @@ async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
     }
     entries = await get_config_entries(FakeMass(), action=CONF_ACTION_AUTH, values=values)  # type: ignore[arg-type]
     by_key = {entry.key: entry for entry in entries}
+    keys = [entry.key for entry in entries]
 
     assert values[CONF_PKCE_PENDING]
     assert "fixture-client-id" in str(by_key[CONF_AUTH_URL].value)
@@ -95,6 +97,7 @@ async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
     assert not by_key[CONF_CALLBACK_URL].hidden
     assert not by_key[CONF_CALLBACK_URL].required
     assert not by_key[CONF_ACTION_VERIFY].hidden
+    assert keys.index(CONF_AUTH_URL) < keys.index(CONF_CALLBACK_URL)
     assert "fixture-verifier" not in repr(entries)
 
 
@@ -173,6 +176,32 @@ async def test_api_use_refreshes_first_and_persists_rotated_token() -> None:
 
     assert fake.calls == ["refresh"]
     assert saved == ["fixture-rotated-refresh"]
+
+
+@pytest.mark.asyncio
+async def test_rotated_token_is_encrypted_and_flushed_immediately() -> None:
+    updates: list[tuple[str, str, bool]] = []
+    saves: list[bool] = []
+    provider = object.__new__(YotoProvider)
+    provider.mass = type(
+        "FakeMass",
+        (),
+        {
+            "config": type(
+                "FakeConfig",
+                (),
+                {"save": lambda _self, immediate=False: saves.append(immediate)},
+            )()
+        },
+    )()
+    provider._update_config_value = (  # type: ignore[method-assign]
+        lambda key, value, encrypted=False: updates.append((key, value, encrypted))
+    )
+
+    await provider._persist_refresh_token("fixture-rotated-refresh")
+
+    assert updates == [(CONF_REFRESH_TOKEN, "fixture-rotated-refresh", True)]
+    assert saves == [True]
 
 
 @pytest.mark.asyncio

@@ -69,11 +69,16 @@ class YotoProvider(MusicProvider):
             client_id,
             refresh_token,
             session=self.mass.http_session,
-            token_callback=lambda token: self._update_config_value(
-                CONF_REFRESH_TOKEN, token, encrypted=True
-            ),
+            token_callback=self._persist_refresh_token,
         )
         self.catalogue = await self.adapter.refresh_catalogue()
+
+    async def _persist_refresh_token(self, refresh_token: str) -> None:
+        """Persist a single-use rotated token before further API work."""
+        from . import CONF_REFRESH_TOKEN
+
+        self._update_config_value(CONF_REFRESH_TOKEN, refresh_token, encrypted=True)
+        self.mass.config.save(immediate=True)
 
     @property
     def is_streaming_provider(self) -> bool:
