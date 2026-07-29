@@ -1,5 +1,6 @@
 .venv/
 .music-assistant-server
+docs/plans/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
