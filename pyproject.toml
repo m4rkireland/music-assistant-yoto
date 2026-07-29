@@ -1,7 +1,7 @@
 [project]
 name = "music-assistant-yoto"
-version = "0.2.0"
-description = "A read-only Yoto music and audiobook provider for Music Assistant"
+version = "0.2.1"
+description = "A read-only Yoto card-library provider for Music Assistant"
 requires-python = ">=3.14"
 dependencies = [
   "music-assistant-models==1.1.129.post1",

@@ -8,8 +8,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-STORY_CATEGORIES = frozenset({"sleep", "stories", "story"})
-
 
 @dataclass(frozen=True, slots=True)
 class CatalogueTrack:
@@ -42,11 +40,6 @@ class CatalogueCard:
     series_title: str | None = None
     series_order: int | None = None
     tracks: tuple[CatalogueTrack, ...] = ()
-
-    @property
-    def is_audiobook(self) -> bool:
-        """Return whether Yoto classifies this card as story content."""
-        return bool(self.category and self.category.strip().casefold() in STORY_CATEGORIES)
 
 
 @dataclass(frozen=True, slots=True)

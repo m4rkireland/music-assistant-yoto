@@ -3,10 +3,10 @@ from pathlib import Path
 
 from music_assistant.models.music_provider import MusicProvider
 from music_assistant_models.enums import ImageType, MediaType
-from music_assistant_models.media_items import Album, Audiobook, Track
+from music_assistant_models.media_items import Album, Track
 
 from yoto.catalogue import Catalogue
-from yoto.provider import YotoProvider, map_album, map_audiobook, map_track
+from yoto.provider import YotoProvider, map_album, map_track
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -55,32 +55,6 @@ def test_tracks_flatten_in_playback_order_with_album_and_author_fallback() -> No
     assert tracks[0].album.item_id == source.item_id
     assert tracks[0].media_type is MediaType.TRACK
     assert next(iter(tracks[0].provider_mappings)).url is None
-
-
-def test_story_card_maps_to_one_resumable_audiobook_with_ordered_chapters() -> None:
-    card = catalogue().cards["card-alpha"]
-
-    audiobook = map_audiobook(card, "yoto-instance")
-
-    assert isinstance(audiobook, Audiobook)
-    assert audiobook.item_id == "card-alpha"
-    assert audiobook.name == "Moshi Moon"
-    assert audiobook.authors == ["Dream Reader"]
-    assert audiobook.duration == 19
-    assert audiobook.position == 2
-    assert audiobook.metadata.grouping == "Moshi"
-    assert [
-        (chapter.position, chapter.name, chapter.start, chapter.end)
-        for chapter in audiobook.metadata.chapters or []
-    ] == [
-        (1, "Chapter Two — Second", 0, 8),
-        (2, "Chapter Two — Third", 8, 15),
-        (3, "Chapter One — First", 15, 19),
-    ]
-    mapping = next(iter(audiobook.provider_mappings))
-    assert mapping.item_id == "card-alpha"
-    assert mapping.provider_domain == "yoto"
-    assert mapping.url is None
 
 
 def test_provider_uses_exact_music_assistant_base_contract() -> None:

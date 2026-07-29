@@ -18,18 +18,16 @@ from music_assistant_models.errors import MediaNotFoundError, ProviderUnavailabl
 from music_assistant_models.media_items import (
     Album,
     Artist,
-    Audiobook,
     AudioFormat,
     BrowseFolder,
     ItemMapping,
-    MediaItemChapter,
     MediaItemImage,
     ProviderMapping,
     SearchResults,
     Track,
     UniqueList,
 )
-from music_assistant_models.streamdetails import MultiPartPath, StreamDetails
+from music_assistant_models.streamdetails import StreamDetails
 
 from .catalogue import Catalogue, CatalogueCard, CatalogueTrack
 
@@ -44,7 +42,6 @@ SUPPORTED_FEATURES = {
     ProviderFeature.BROWSE,
     ProviderFeature.SEARCH,
     ProviderFeature.LIBRARY_ALBUMS,
-    ProviderFeature.LIBRARY_AUDIOBOOKS,
     ProviderFeature.LIBRARY_TRACKS,
 }
 
@@ -94,51 +91,32 @@ class YotoProvider(MusicProvider):
         await super().sync_library(media_type)
 
     async def get_library_albums(self) -> AsyncGenerator[Album]:
-        """Yield non-story cards as albums."""
+        """Yield all cards as albums."""
         for card in self.catalogue.cards.values():
-            if not card.is_audiobook:
-                yield map_album(card, self.instance_id)
-
-    async def get_library_audiobooks(self) -> AsyncGenerator[Audiobook]:
-        """Yield story cards as resumable audiobooks."""
-        for card in self.catalogue.cards.values():
-            if card.is_audiobook:
-                yield map_audiobook(card, self.instance_id)
+            yield map_album(card, self.instance_id)
 
     async def get_library_tracks(self) -> AsyncGenerator[Track]:
         """Yield every playable card track in source order."""
         for card in self.catalogue.cards.values():
-            if card.is_audiobook:
-                continue
             for track in card.tracks:
                 yield map_track(card, track, self.instance_id)
 
     async def get_album(self, prov_album_id: str) -> Album:
         """Return one card as an album."""
-        if (card := self.catalogue.cards.get(prov_album_id)) is None or card.is_audiobook:
+        if (card := self.catalogue.cards.get(prov_album_id)) is None:
             raise MediaNotFoundError(f"Yoto card {prov_album_id!r} is unavailable")
         return map_album(card, self.instance_id)
-
-    async def get_audiobook(self, prov_audiobook_id: str) -> Audiobook:
-        """Return one story card as an audiobook."""
-        if (card := self.catalogue.cards.get(prov_audiobook_id)) is None or not card.is_audiobook:
-            raise MediaNotFoundError(f"Yoto audiobook {prov_audiobook_id!r} is unavailable")
-        return map_audiobook(card, self.instance_id)
 
     async def get_track(self, prov_track_id: str) -> Track:
         """Return one track by its stable provider ID."""
         track = self.catalogue.find_track(prov_track_id)
-        if (
-            track is None
-            or (card := self.catalogue.cards.get(track.card_id)) is None
-            or card.is_audiobook
-        ):
+        if track is None or (card := self.catalogue.cards.get(track.card_id)) is None:
             raise MediaNotFoundError("Yoto track is unavailable")
         return map_track(card, track, self.instance_id)
 
     async def get_album_tracks(self, prov_album_id: str) -> list[Track]:
         """Return the ordered tracks for one card."""
-        if (card := self.catalogue.cards.get(prov_album_id)) is None or card.is_audiobook:
+        if (card := self.catalogue.cards.get(prov_album_id)) is None:
             raise MediaNotFoundError(f"Yoto card {prov_album_id!r} is unavailable")
         return [map_track(card, track, self.instance_id) for track in card.tracks]
 
@@ -154,19 +132,11 @@ class YotoProvider(MusicProvider):
             result.albums = [
                 map_album(card, self.instance_id)
                 for card in self.catalogue.cards.values()
-                if not card.is_audiobook and needle in _card_search_text(card)
-            ][:limit]
-        if MediaType.AUDIOBOOK in media_types:
-            result.audiobooks = [
-                map_audiobook(card, self.instance_id)
-                for card in self.catalogue.cards.values()
-                if card.is_audiobook and needle in _card_search_text(card)
+                if needle in _card_search_text(card)
             ][:limit]
         if MediaType.TRACK in media_types:
             matches: list[Track] = []
             for card in self.catalogue.cards.values():
-                if card.is_audiobook:
-                    continue
                 card_text = _card_search_text(card)
                 for source in card.tracks:
                     track_text = (
@@ -181,7 +151,7 @@ class YotoProvider(MusicProvider):
             result.tracks = matches
         return result
 
-    async def browse(self, path: str) -> Sequence[Album | Audiobook | ItemMapping | BrowseFolder]:
+    async def browse(self, path: str) -> Sequence[Album | ItemMapping | BrowseFolder]:
         """Browse all cards and Yoto library groups."""
         root = f"{self.instance_id}://"
         if path in (self.instance_id, root):
@@ -200,7 +170,7 @@ class YotoProvider(MusicProvider):
                 ),
             ]
         if path == f"{root}cards":
-            return [_map_card(card, self.instance_id) for card in self.catalogue.cards.values()]
+            return [map_album(card, self.instance_id) for card in self.catalogue.cards.values()]
         if path == f"{root}groups":
             return [
                 BrowseFolder(
@@ -218,7 +188,7 @@ class YotoProvider(MusicProvider):
             if group is None:
                 raise MediaNotFoundError("Yoto group is unavailable")
             return [
-                _map_card(card, self.instance_id)
+                map_album(card, self.instance_id)
                 for card_id in group.card_ids
                 if (card := self.catalogue.cards.get(card_id)) is not None
             ]
@@ -226,16 +196,10 @@ class YotoProvider(MusicProvider):
 
     async def get_stream_details(self, item_id: str, media_type: MediaType) -> StreamDetails:
         """Resolve a fresh signed stream immediately before playback."""
-        if media_type is MediaType.AUDIOBOOK:
-            return await self._get_audiobook_stream_details(item_id)
         if media_type is not MediaType.TRACK:
-            raise MediaNotFoundError("Yoto only streams tracks and audiobooks")
+            raise MediaNotFoundError("Yoto only streams tracks")
         source = self.catalogue.find_track(item_id)
-        if (
-            source is None
-            or (card := self.catalogue.cards.get(source.card_id)) is None
-            or card.is_audiobook
-        ):
+        if source is None:
             raise MediaNotFoundError("Yoto track is unavailable")
         try:
             resolved = await self.adapter.resolve_stream(item_id)
@@ -249,41 +213,6 @@ class YotoProvider(MusicProvider):
             stream_type=StreamType.HTTP,
             duration=resolved.duration or source.duration,
             path=resolved.path,
-            allow_seek=True,
-            can_seek=True,
-        )
-
-    async def _get_audiobook_stream_details(self, item_id: str) -> StreamDetails:
-        """Resolve all signed parts for one story card."""
-        card = self.catalogue.cards.get(item_id)
-        if card is None or not card.is_audiobook or not card.tracks:
-            raise MediaNotFoundError("Yoto audiobook is unavailable")
-        try:
-            resolved = await self.adapter.resolve_audiobook(item_id)
-        except ProviderUnavailableError as err:
-            raise MediaNotFoundError(str(err)) from err
-        if len(resolved) != len(card.tracks):
-            raise MediaNotFoundError("Yoto audiobook parts changed during playback setup")
-        parts = [
-            MultiPartPath(
-                path=stream.path,
-                duration=stream.duration or source.duration,
-            )
-            for source, stream in zip(card.tracks, resolved, strict=True)
-        ]
-        formats = {
-            stream.format or source.format
-            for source, stream in zip(card.tracks, resolved, strict=True)
-        }
-        content_format = formats.pop() if len(formats) == 1 else None
-        return StreamDetails(
-            provider=self.instance_id,
-            item_id=item_id,
-            audio_format=AudioFormat(content_type=_content_type(content_format)),
-            media_type=MediaType.AUDIOBOOK,
-            stream_type=StreamType.HTTP,
-            duration=sum(int(part.duration or 0) for part in parts),
-            path=parts[0].path if len(parts) == 1 else parts,
             allow_seek=True,
             can_seek=True,
         )
@@ -304,49 +233,6 @@ def map_album(card: CatalogueCard, instance_id: str) -> Album:
     if card.artwork:
         album.metadata.images = UniqueList([_image(card.artwork, instance_id)])
     return album
-
-
-def map_audiobook(card: CatalogueCard, instance_id: str) -> Audiobook:
-    """Map a story card to one resumable Music Assistant audiobook."""
-    duration = sum(max(track.duration, 0) for track in card.tracks)
-    audiobook = Audiobook(
-        item_id=card.item_id,
-        provider=instance_id,
-        name=card.title,
-        authors=UniqueList([card.author] if card.author else []),
-        duration=duration,
-        position=card.series_order,
-        provider_mappings={
-            _mapping(
-                card.item_id,
-                instance_id,
-                _common_format(card),
-                available=bool(card.tracks) and duration > 0,
-            )
-        },
-        is_playable=bool(card.tracks) and duration > 0,
-    )
-    audiobook.metadata.description = card.description
-    audiobook.metadata.grouping = card.series_title
-    if card.category:
-        audiobook.metadata.genres = {card.category}
-    if card.artwork:
-        audiobook.metadata.images = UniqueList([_image(card.artwork, instance_id)])
-    elapsed = 0
-    chapters: list[MediaItemChapter] = []
-    for position, track in enumerate(card.tracks, 1):
-        end = elapsed + max(track.duration, 0)
-        chapters.append(
-            MediaItemChapter(
-                position=position,
-                name=_chapter_name(track),
-                start=elapsed,
-                end=end if end > elapsed else None,
-            )
-        )
-        elapsed = end
-    audiobook.metadata.chapters = chapters
-    return audiobook
 
 
 def map_track(card: CatalogueCard, source: CatalogueTrack, instance_id: str) -> Track:
@@ -383,21 +269,6 @@ def _card_search_text(card: CatalogueCard) -> str:
     return " ".join(
         value for value in (card.title, card.author, card.series_title, card.category) if value
     ).casefold()
-
-
-def _map_card(card: CatalogueCard, instance_id: str) -> Album | Audiobook:
-    return map_audiobook(card, instance_id) if card.is_audiobook else map_album(card, instance_id)
-
-
-def _chapter_name(track: CatalogueTrack) -> str:
-    if track.chapter_title and track.chapter_title.casefold() != track.title.casefold():
-        return f"{track.chapter_title} — {track.title}"
-    return track.chapter_title or track.title
-
-
-def _common_format(card: CatalogueCard) -> str | None:
-    formats = {track.format for track in card.tracks}
-    return formats.pop() if len(formats) == 1 else None
 
 
 def _artist(name: str | None, instance_id: str) -> Artist:

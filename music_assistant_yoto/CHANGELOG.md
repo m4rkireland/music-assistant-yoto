@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.9.9-yoto.6
+
+- Restore the established album-and-track model for every Yoto card.
+- Document native audiobook and resume semantics as potential future enhancements.
+- Replace development-history documents with concise installation and security references.
+- Remove environment-specific and speculative project notes.
+
 ## 2.9.9-yoto.5
 
 - Map story and sleep cards to seekable Music Assistant audiobooks.

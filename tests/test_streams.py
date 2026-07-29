@@ -8,7 +8,6 @@ from typing import Any
 import pytest
 from music_assistant_models.enums import ContentType, MediaType, StreamType
 from music_assistant_models.errors import MediaNotFoundError
-from music_assistant_models.streamdetails import MultiPartPath
 
 from yoto.catalogue import Catalogue, CatalogueCard, CatalogueTrack, encode_track_id
 from yoto.client import YotoAdapter
@@ -50,15 +49,7 @@ class FakeStreamAPI:
         self.library: dict[str, Any] = {
             "card-alpha": FakeCard(
                 "card-alpha",
-                {
-                    "chapter-a": FakeChapter(
-                        "chapter-a",
-                        {
-                            "track-a": FakeTrack("track-a", duration=42),
-                            "track-b": FakeTrack("track-b", title="Moon Ending", duration=18),
-                        },
-                    )
-                },
+                {"chapter-a": FakeChapter("chapter-a", {"track-a": FakeTrack("track-a")})},
             )
         }
         self.groups: dict[str, Any] = {}
@@ -72,14 +63,12 @@ class FakeStreamAPI:
 
     async def update_card_detail(self, card_id: str) -> None:
         self.detail_calls += 1
-        for track in self.library[card_id].chapters["chapter-a"].tracks.values():
-            track.trackUrl = (
-                f"https://secure-media.example/{track.key}.m4a?"
-                f"signature=fixture-{self.detail_calls}"
-            )
+        self.library[card_id].chapters["chapter-a"].tracks[
+            "track-a"
+        ].trackUrl = f"https://secure-media.example/audio.m4a?signature=fixture-{self.detail_calls}"
 
 
-def _provider(adapter: YotoAdapter, item_id: str, *, category: str | None = None) -> YotoProvider:
+def _provider(adapter: YotoAdapter, item_id: str) -> YotoProvider:
     provider = object.__new__(YotoProvider)
     provider.config = SimpleNamespace(instance_id="yoto-instance")
     provider.adapter = adapter
@@ -101,20 +90,7 @@ def _provider(adapter: YotoAdapter, item_id: str, *, category: str | None = None
                         track_number=1,
                         format="aac",
                     ),
-                    CatalogueTrack(
-                        item_id=encode_track_id("card-alpha", "chapter-a", "track-b"),
-                        card_id="card-alpha",
-                        chapter_key="chapter-a",
-                        track_key="track-b",
-                        title="Moon Ending",
-                        chapter_title="Moon Chapter",
-                        duration=18,
-                        chapter_number=1,
-                        track_number=2,
-                        format="aac",
-                    ),
                 ),
-                category=category,
             )
         }
     )
@@ -154,32 +130,6 @@ async def test_signed_stream_is_not_added_to_catalogue_metadata_or_logs(caplog) 
     assert "secure-media" not in repr(provider.catalogue)
     assert "signature=" not in caplog.text
     assert "secure-media" not in caplog.text
-
-
-@pytest.mark.asyncio
-async def test_audiobook_stream_resolves_all_parts_fresh_with_seekable_combined_timeline() -> None:
-    api = FakeStreamAPI()
-    adapter = YotoAdapter("fixture-client", "fixture-refresh", api=api)
-    item_id = encode_track_id("card-alpha", "chapter-a", "track-a")
-    provider = _provider(adapter, item_id, category="stories")
-
-    first = await provider.get_stream_details("card-alpha", MediaType.AUDIOBOOK)
-    second = await provider.get_stream_details("card-alpha", MediaType.AUDIOBOOK)
-
-    assert api.detail_calls == 2
-    assert first.media_type is MediaType.AUDIOBOOK
-    assert first.stream_type is StreamType.HTTP
-    assert first.duration == 60
-    assert first.allow_seek
-    assert first.can_seek
-    assert isinstance(first.path, list)
-    assert all(isinstance(part, MultiPartPath) for part in first.path)
-    assert [part.duration for part in first.path] == [42, 18]
-    assert [part.path.split("?", 1)[0].rsplit("/", 1)[-1] for part in first.path] == [
-        "track-a.m4a",
-        "track-b.m4a",
-    ]
-    assert first.path != second.path
 
 
 @pytest.mark.asyncio

@@ -1,117 +1,83 @@
 # Yoto provider for Music Assistant
 
-An experimental, unofficial, read-only [Music Assistant](https://music-assistant.io/) provider for a family's Yoto card library.
+An experimental, unofficial, read-only provider that makes a family's Yoto card library available in [Music Assistant](https://music-assistant.io/).
 
-The provider imports Yoto cards into Music Assistant, preserves card and chapter metadata, supports search and browse, and resolves fresh signed media URLs only when playback begins.
-
-> This project is not affiliated with, supported by, or endorsed by Yoto. Yoto APIs and content availability may change without notice. Use is subject to Yoto's terms and your content rights.
+> This project is not affiliated with, supported by, or endorsed by Yoto.
 
 ## Features
 
-- Browser-based Yoto OAuth using Authorization Code with PKCE
-- No Yoto password, OAuth client secret, or Home Assistant credential dependency
-- Encrypted refresh-token storage with immediate persistence after token rotation
-- Read-only access to cards, groups, metadata, artwork, and audio
+- Browser-based Yoto authentication using Authorization Code with PKCE
+- No Yoto password or OAuth client secret required
+- Cards represented as Music Assistant albums with ordered tracks
+- Card artwork, titles, authors, series, chapters, durations, and library groups
+- Search and browse support
 - Automatic catalogue refresh during Music Assistant library synchronization
-- Search across cards, authors, series, categories, chapters, and track titles
-- Browse views for all cards and Yoto library groups
-- Fresh signed stream resolution at playback time
-- Music cards represented as albums with ordered tracks
-- Story and sleep cards represented as seekable audiobooks with chapters and Music Assistant resume positions
+- Fresh signed media URLs resolved only when playback starts
+- Encrypted refresh-token storage with immediate persistence after token rotation
+- Read-only operation: the provider never changes the Yoto account or library
 
-## Media mapping
+## Current media model
 
-| Yoto content | Music Assistant representation |
-| --- | --- |
-| Category `stories`, `story`, or `sleep` | One audiobook per card |
-| Music and unclassified cards | Album with ordered tracks |
-| Yoto chapter/track sequence on a story card | Audiobook chapter timeline |
-| Yoto library group | Browse folder |
+Every Yoto card is represented as a Music Assistant album. The card's playable content is exposed as ordered tracks; Yoto chapter order is preserved through disc and track numbering.
 
-Audiobook progress is stored in Music Assistant's playlog. The provider remains read-only and does not write listening progress back to Yoto.
+This compatibility model works for music and story cards without requiring changes to Music Assistant's media model. Native audiobook representation, chapter-aware resume positions, and audiobook completion state are not implemented. They are potential future enhancements.
 
 ## Compatibility
 
 - Music Assistant Server `2.9.9`
 - Python `3.14`
 - `yoto-api==4.3.2`
-- Home Assistant architectures: `amd64`, `aarch64`
+- Home Assistant add-on architectures: `amd64` and `aarch64`
 
-## Install the Home Assistant add-on
+## Home Assistant installation
 
-1. Back up Home Assistant and the existing Music Assistant application data.
-2. Add this repository to the Home Assistant App Store:
-   `https://github.com/m4rkireland/music-assistant-yoto`
-3. Install **Music Assistant Yoto**.
-4. Stop the stock Music Assistant add-on before starting this add-on. Both use host networking and the same ports.
-5. Open the Music Assistant UI and add the **Yoto** music provider.
+1. Add this URL as a custom repository in the Home Assistant App Store:
 
-The custom add-on uses a separate slug and data directory, so the stock add-on remains available for rollback. See [Installation and rollback](docs/installation.md) for details.
+   ```text
+   https://github.com/m4rkireland/music-assistant-yoto
+   ```
 
-## Configure Yoto
+2. Install **Music Assistant Yoto**.
+3. Stop the stock Music Assistant add-on before starting Music Assistant Yoto. Both use the same host-network ports.
+4. Open Music Assistant and add the **Yoto** provider.
 
-A Yoto OAuth client configured for browser PKCE is required. The provider requests only:
+See [Installation](docs/installation.md) for upgrades, uninstalling, existing Music Assistant installations, and development setup.
+
+## Yoto authentication
+
+A Yoto OAuth client configured for browser PKCE is required. The provider requests:
 
 - `family:library:view`
 - `offline_access`
 
-In Music Assistant:
+To configure the provider:
 
-1. Add the **Yoto** music provider.
-2. Enter the Yoto OAuth client ID.
-3. Select **Generate copyable Yoto authorization URL**.
-4. Open the URL using the adjacent help link, or tap and hold the URL field to copy it.
-5. Complete authorization on Yoto's site.
-6. The registered localhost callback may fail to load. Copy its complete URL from the browser address bar.
-7. Paste the callback URL into Music Assistant and select **Verify Yoto callback**.
-8. Save the provider.
+1. Enter the Yoto OAuth client ID.
+2. Select **Generate copyable Yoto authorization URL**.
+3. Open the generated link or copy it from the URL field.
+4. Authorize access on Yoto's website.
+5. Copy the complete localhost callback URL from the browser address bar. The callback page itself does not need to load.
+6. Paste the callback URL into Music Assistant.
+7. Select **Verify Yoto callback**, then save the provider.
 
-The PKCE verifier stays in the server-side setup session. Refresh credentials are stored as an encrypted Music Assistant configuration value.
+The PKCE verifier remains in the server-side setup session. Music Assistant stores the resulting refresh credential as an encrypted configuration value.
 
-## Synchronization and playback
+## Synchronization
 
-Music Assistant schedules provider library synchronization every 12 hours by default. A manual provider sync imports newly linked cards sooner.
+Music Assistant synchronizes provider libraries every 12 hours by default. Run a manual Yoto provider synchronization to import newly linked cards sooner.
 
-At each sync, the provider refreshes the Yoto family library before importing albums, tracks, and audiobooks. Story cards previously imported as albums are retired from that representation and reimported as audiobooks.
+Each synchronization refreshes the Yoto family library before importing albums and tracks. The provider does not use a webhook and changes are not immediate.
 
-Audiobook resume positions are maintained locally by Music Assistant. During playback, Music Assistant treats the ordered Yoto audio parts as one seekable timeline and resumes inside the correct part.
+## Limitations
 
-## Development
-
-Clone the matching Music Assistant source into the repository-local development path:
-
-```bash
-git clone --depth 1 --branch 2.9.9 \
-  https://github.com/music-assistant/server.git \
-  .music-assistant-server
-
-uv python install 3.14
-uv venv --python 3.14 .venv
-uv pip install --python .venv/bin/python -e '.[dev]'
-
-(
-  cd .music-assistant-server
-  ./scripts/setup.sh .venv-yoto-isolated
-)
-uv pip install \
-  --python .music-assistant-server/.venv-yoto-isolated/bin/python \
-  'yoto-api==4.3.2'
-
-./scripts/check.sh
-```
-
-Set `MA_SERVER=/path/to/server` to use another exact `2.9.9` checkout.
-
-## Security and limitations
-
-- The provider is strictly read-only.
-- Signed media URLs are not stored in catalogue objects, provider mappings, configuration, fixtures, or logs.
+- The provider is experimental and tested against Music Assistant `2.9.9`.
+- All cards currently use the album-and-track media model, including stories and other spoken-word content.
+- Native audiobook resume and completion semantics are not available.
 - Yoto's family-library and card-detail interfaces are not all covered by its public API reference and may change.
-- The localhost callback must currently be copied back into Music Assistant after browser authorization.
-- Category-based media classification depends on Yoto metadata. Unknown categories remain albums to avoid accidental conversion.
+- The browser callback URL must currently be copied back into Music Assistant to complete authentication.
 
-See [Security and data handling](docs/security.md).
+## Security
 
-## License
+The provider is read-only. OAuth credentials are encrypted by Music Assistant, and short-lived signed media URLs are resolved only for playback rather than stored in the library.
 
-The provider source is licensed under the terms in [LICENSE](LICENSE), if present. Third-party components retain their own licenses.
+See [Security](docs/security.md) for the complete data-handling model.

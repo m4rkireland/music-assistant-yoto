@@ -1,50 +1,74 @@
-# Security and data handling
+# Security
 
-## Authentication
+## Access model
 
-- The user supplies a Yoto OAuth client ID. No client secret, Yoto password, or Home Assistant credential is requested.
-- Authorization uses the browser Authorization Code flow with PKCE.
-- Requested scopes are limited to `family:library:view` and `offline_access`.
-- The PKCE verifier and pending authorization state remain in the server-side setup session.
-- Refresh tokens are stored in a Music Assistant `SECURE_STRING` configuration entry.
-- Rotated refresh tokens are encrypted and flushed to configuration immediately.
+The provider is read-only. It retrieves the authenticated family's Yoto library, card metadata, artwork, groups, and playback URLs. It does not:
 
-## Signed media URLs
+- modify cards, playlists, groups, account settings, or devices;
+- control Yoto players;
+- publish listening progress or completion state to Yoto;
+- connect to Yoto MQTT services;
+- require Home Assistant credentials.
 
-Yoto media URLs are short-lived credentials. The provider fetches them only while preparing playback.
+## OAuth authorization
 
-Signed URLs are never added to:
+Authorization uses the OAuth Authorization Code flow with PKCE. The configured OAuth client is treated as a public client, so no client secret is required.
 
-- catalogue snapshots;
-- albums, tracks, audiobooks, or chapter metadata;
+Requested scopes:
+
+- `family:library:view`
+- `offline_access`
+
+The PKCE verifier and pending authorization state remain in the Music Assistant setup session. The provider validates the returned state before exchanging the authorization code.
+
+## Credential storage
+
+The refresh token is stored in a Music Assistant `SECURE_STRING` configuration entry. Music Assistant encrypts secure configuration values at rest.
+
+Yoto may rotate the refresh token during renewal. The provider writes a rotated token to encrypted configuration immediately and flushes the configuration before continuing.
+
+The provider does not log:
+
+- access or refresh tokens;
+- authorization codes;
+- callback URLs containing authorization codes;
+- PKCE verifiers;
+- OAuth client credentials.
+
+## Media URLs
+
+Yoto playback URLs are signed and time-limited. The provider resolves a fresh URL when Music Assistant prepares a track for playback.
+
+Signed media URLs are not stored in:
+
+- album or track metadata;
 - provider mappings;
 - provider configuration;
-- fixtures or documentation;
-- application log messages.
+- test fixtures;
+- application logs.
 
-For multi-part audiobooks, current URLs are resolved for the ordered audio parts at playback setup and passed directly to Music Assistant's stream pipeline.
+## Data retained by Music Assistant
 
-## Resume positions
+Music Assistant stores imported catalogue metadata such as card titles, track titles, authors, artwork references, durations, and provider identifiers. Playback history and library state are managed by Music Assistant according to its own configuration.
 
-Audiobook progress is stored in Music Assistant's local playlog. The provider does not send progress, completion state, favorites, library edits, or playback commands to Yoto.
+The provider does not maintain a separate catalogue database.
 
-## Read-only API surface
+## Revoking access
 
-The provider uses authentication, token refresh, family-library, card-detail, and library-group operations. It does not connect to Yoto MQTT, control Yoto players, or call account, device, card, playlist, or library mutation endpoints.
+To withdraw access:
 
-## Operational considerations
+1. Remove or disable the Yoto provider in Music Assistant.
+2. Revoke the authorization from the Yoto account or OAuth client management interface.
+3. Remove logs or diagnostics if they were captured while debug logging was enabled.
 
-- Some family-library and card-detail interfaces used by `yoto-api` are not represented in Yoto's public API reference and may change.
-- Content availability depends on the authenticated account and its rights.
-- Unknown Yoto categories remain albums; only the recognized `stories`, `story`, and `sleep` values are mapped as audiobooks.
-- Debug logs should report only non-secret information such as provider state, media type, host, content format, and HTTP status.
+Removing the Home Assistant add-on alone does not revoke the OAuth authorization.
 
-## Incident response
+## Reporting a vulnerability
 
-If an OAuth credential or signed media URL is exposed:
+Do not include credentials, authorization callbacks, signed media URLs, private library metadata, or diagnostic archives in a public issue.
 
-1. Stop the affected Music Assistant instance.
-2. Remove the affected logs or diagnostics from shared storage.
-3. Revoke the Yoto authorization.
-4. Remove and reconfigure the Yoto provider.
-5. Verify that the replacement refresh token persists across restart.
+Report the minimum reproducible details and redact all authentication material. If the issue could expose credentials or another user's data, contact the repository maintainer privately before opening a public report.
+
+## Third-party interfaces
+
+Some Yoto family-library and card-detail interfaces used by `yoto-api` are not represented in Yoto's public API reference. Their behavior may change independently of this project. Use the provider only with accounts and content you are authorized to access.
