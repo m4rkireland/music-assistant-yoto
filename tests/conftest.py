@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from types import ModuleType
 
-MA_SERVER = Path("/home/dave/work/music-assistant-yoto-reference/server")
+MA_SERVER = Path(
+    os.environ.get("MA_SERVER", "/home/dave/work/music-assistant-yoto-reference/server")
+)
 
 
 def _namespace(name: str, path: Path) -> None:

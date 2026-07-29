@@ -1,9 +1,11 @@
 {
   "type": "music",
   "domain": "yoto",
+  "stage": "experimental",
   "name": "Yoto",
-  "description": "Read-only access to cards in a Yoto family library.",
+  "description": "Browse and stream cards from a Yoto family library.",
   "codeowners": [],
   "requirements": ["yoto-api==4.3.2"],
-  "documentation": "https://github.com/music-assistant/music-assistant-yoto"
+  "documentation": "https://github.com/music-assistant/music-assistant-yoto",
+  "multi_instance": true
 }

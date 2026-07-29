@@ -13,6 +13,8 @@ def test_manifest_is_music_provider_with_pinned_dependency_and_no_secrets() -> N
     assert manifest["domain"] == "yoto"
     assert manifest["type"] == "music"
     assert manifest["name"] == "Yoto"
+    assert manifest["stage"] == "experimental"
+    assert manifest["multi_instance"] is True
     assert manifest["requirements"] == ["yoto-api==4.3.2"]
     assert {"description", "codeowners", "documentation"} <= manifest.keys()
     serialized = json.dumps(manifest).lower()

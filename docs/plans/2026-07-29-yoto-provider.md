@@ -37,7 +37,7 @@
 
 ### Task 3: Independent Yoto authentication and refresh persistence
 
-**Objective:** Implement device-code/browser authorization with a user-supplied client ID, a secure refresh-token field, automatic refresh, and persistence of rotated refresh tokens.
+**Objective:** Implement browser Authorization Code + PKCE with a user-supplied client ID, a secure refresh-token field, automatic refresh, and persistence of rotated refresh tokens.
 
 **Files:**
 - Create: `yoto/client.py`

@@ -7,7 +7,15 @@ import pytest
 from music_assistant_models.enums import ConfigEntryType
 from music_assistant_models.errors import LoginFailed
 
-from yoto import CONF_CLIENT_ID, CONF_REFRESH_TOKEN, get_config_entries
+from yoto import (
+    CONF_ACTION_AUTH,
+    CONF_ACTION_VERIFY,
+    CONF_CALLBACK_URL,
+    CONF_CLIENT_ID,
+    CONF_PKCE_PENDING,
+    CONF_REFRESH_TOKEN,
+    get_config_entries,
+)
 from yoto.client import YotoAdapter
 
 
@@ -55,10 +63,84 @@ async def test_config_schema_warns_and_keeps_refresh_token_secure() -> None:
     by_key = {entry.key: entry for entry in entries}
 
     assert "unofficial" in by_key["warning"].label.lower()
+    assert "not affiliated" in by_key["warning"].label.lower()
+    assert "not endorsed" in by_key["warning"].label.lower()
     assert by_key[CONF_CLIENT_ID].required
     assert by_key[CONF_REFRESH_TOKEN].type is ConfigEntryType.SECURE_STRING
     assert by_key[CONF_REFRESH_TOKEN].hidden
-    assert by_key["authenticate"].action == "authenticate"
+    assert by_key[CONF_PKCE_PENDING].hidden
+    assert by_key[CONF_ACTION_AUTH].action == CONF_ACTION_AUTH
+    assert by_key[CONF_CALLBACK_URL].hidden
+    assert by_key[CONF_ACTION_VERIFY].hidden
+
+
+@pytest.mark.asyncio
+async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
+    events: list[tuple[Any, ...]] = []
+
+    class FakeMass:
+        def signal_event(self, *args: Any) -> None:
+            events.append(args)
+
+    values: dict[str, Any] = {
+        CONF_CLIENT_ID: "fixture-client-id",
+        "session_id": "fixture-session",
+    }
+    entries = await get_config_entries(FakeMass(), action=CONF_ACTION_AUTH, values=values)  # type: ignore[arg-type]
+    by_key = {entry.key: entry for entry in entries}
+
+    assert values[CONF_PKCE_PENDING]
+    assert "fixture-client-id" in events[0][2]
+    assert "family%3Alibrary%3Aview" in events[0][2]
+    assert not by_key[CONF_CALLBACK_URL].hidden
+    assert by_key[CONF_CALLBACK_URL].required
+    assert not by_key[CONF_ACTION_VERIFY].hidden
+    assert "fixture-verifier" not in repr(entries)
+
+
+class FakeTokenResponse:
+    ok = True
+
+    async def __aenter__(self) -> FakeTokenResponse:
+        return self
+
+    async def __aexit__(self, *_args: Any) -> None:
+        return None
+
+    async def json(self, **_kwargs: Any) -> dict[str, Any]:
+        return {
+            "access_token": "fixture-access",
+            "refresh_token": "fixture-refresh",
+            "expires_in": 3600,
+            "token_type": "Bearer",
+        }
+
+
+class FakeHttpSession:
+    def post(self, *_args: Any, **_kwargs: Any) -> FakeTokenResponse:
+        return FakeTokenResponse()
+
+
+@pytest.mark.asyncio
+async def test_pkce_callback_exchange_captures_refresh_token_securely() -> None:
+    mass = type("FakeMass", (), {"http_session": FakeHttpSession()})()
+    values: dict[str, Any] = {
+        CONF_CLIENT_ID: "fixture-client-id",
+        CONF_PKCE_PENDING: True,
+        CONF_CALLBACK_URL: "http://localhost:8095/callback?code=fixture-code",
+        "session_id": "fixture-session",
+    }
+    from yoto import _PKCE_SESSIONS
+
+    _PKCE_SESSIONS["fixture-session"] = "fixture-verifier"
+
+    entries = await get_config_entries(mass, action=CONF_ACTION_VERIFY, values=values)  # type: ignore[arg-type]
+    by_key = {entry.key: entry for entry in entries}
+
+    assert values[CONF_REFRESH_TOKEN] == "fixture-refresh"
+    assert values[CONF_PKCE_PENDING] is False
+    assert by_key[CONF_REFRESH_TOKEN].hidden
+    assert by_key[CONF_REFRESH_TOKEN].type is ConfigEntryType.SECURE_STRING
 
 
 @pytest.mark.asyncio
