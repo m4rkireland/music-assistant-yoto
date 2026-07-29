@@ -1,0 +1,9 @@
+{
+  "type": "music",
+  "domain": "yoto",
+  "name": "Yoto",
+  "description": "Read-only access to cards in a Yoto family library.",
+  "codeowners": [],
+  "requirements": ["yoto-api==4.3.2"],
+  "documentation": "https://github.com/music-assistant/music-assistant-yoto"
+}
