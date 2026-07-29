@@ -96,7 +96,7 @@ async def test_pkce_start_exposes_browser_url_and_callback_step() -> None:
     assert by_key[CONF_AUTH_URL].read_only
     assert by_key[CONF_AUTH_URL].value == events[0][2]
     assert not by_key[CONF_CALLBACK_URL].hidden
-    assert by_key[CONF_CALLBACK_URL].required
+    assert not by_key[CONF_CALLBACK_URL].required
     assert not by_key[CONF_ACTION_VERIFY].hidden
     assert "fixture-verifier" not in repr(entries)
 

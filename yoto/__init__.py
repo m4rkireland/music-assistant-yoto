@@ -121,7 +121,7 @@ async def get_config_entries(
             type=ConfigEntryType.STRING,
             label="Complete Yoto callback URL",
             description="It starts with http://localhost:8095/callback?code=",
-            required=pending_callback,
+            required=False,
             hidden=not pending_callback,
             value=values.get(CONF_CALLBACK_URL),
         ),
