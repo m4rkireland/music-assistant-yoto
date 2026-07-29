@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
+from music_assistant.models.music_provider import MusicProvider
 from music_assistant_models.enums import MediaType
 from music_assistant_models.errors import MediaNotFoundError
 from music_assistant_models.media_items import Album, BrowseFolder
@@ -82,3 +84,22 @@ async def test_browse_exposes_all_cards_and_groups_and_skips_stale_group_members
 async def test_browse_rejects_unknown_paths() -> None:
     with pytest.raises(MediaNotFoundError):
         await _provider().browse("yoto-instance://unknown")
+
+
+@pytest.mark.asyncio
+async def test_library_sync_refreshes_yoto_catalogue_before_import(monkeypatch) -> None:
+    provider = _provider()
+    refreshed = Catalogue()
+    provider.adapter = SimpleNamespace(refresh_catalogue=AsyncMock(return_value=refreshed))
+    base_sync_calls: list[MediaType] = []
+
+    async def fake_base_sync(_provider, media_type: MediaType) -> None:
+        base_sync_calls.append(media_type)
+
+    monkeypatch.setattr(MusicProvider, "sync_library", fake_base_sync)
+
+    await provider.sync_library(MediaType.ALBUM)
+
+    provider.adapter.refresh_catalogue.assert_awaited_once_with()
+    assert provider.catalogue is refreshed
+    assert base_sync_calls == [MediaType.ALBUM]

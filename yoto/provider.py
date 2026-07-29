@@ -80,6 +80,11 @@ class YotoProvider(MusicProvider):
         """Return whether this provider resolves remote streams."""
         return True
 
+    async def sync_library(self, media_type: MediaType) -> None:
+        """Refresh the Yoto catalogue before importing it into the MA library."""
+        self.catalogue = await self.adapter.refresh_catalogue()
+        await super().sync_library(media_type)
+
     async def get_library_albums(self) -> AsyncGenerator[Album]:
         """Yield all cards as albums."""
         for card in self.catalogue.cards.values():

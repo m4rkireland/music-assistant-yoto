@@ -31,6 +31,7 @@ Completed on 2026-07-29 against the isolated instance:
 - Search for `Moshi` returned the cards `Moshi: Bedtime with Moshi` and `Close Your Eyes`.
 - The Moshi results included ordered tracks such as `Bobo the Lullaby Llama`, `Buster's Sleepy Egg Hunt`, `Close Your Eyes Sleepy Paws`, `Dawdles the Twiilight Tortoise`, `Jeepers Brings the Nightime Ease`, `Night Swimming with Yawnsy`, `Nodkins Goes Dream Hopping`, and `Wuzzle's Windchime Wood`.
 - Restarting the isolated Music Assistant server loaded Yoto again without browser authorization, confirming persisted refresh authentication.
+- A manual Music Assistant sync refreshed the live Yoto catalogue before importing albums and tracks. Both tasks completed successfully with no error and were rescheduled on Music Assistant 2.9.9's 12-hour cadence.
 - A real `Bobo the Lullaby Llama` stream resolved in 173 ms. Music Assistant detected AAC at 44.1 kHz/128 kb/s and received its first audio chunk after 0.18 seconds.
 - Log and settings scans found no access token, refresh token, or signed stream URL text.
 
