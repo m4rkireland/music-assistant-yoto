@@ -1,7 +1,18 @@
-# Music Assistant Yoto (Private)
+# Music Assistant Yoto
 
-Private, experimental Music Assistant 2.9.9 add-on with the unofficial read-only Yoto provider included.
+An experimental Music Assistant `2.9.9` add-on containing the unofficial, read-only Yoto provider.
 
-This add-on is not affiliated with, supported by, or endorsed by Yoto. It is deliberately assigned a different add-on slug from the stock Music Assistant add-on. Do not run both simultaneously because both use host networking and the same ports.
+## Highlights
 
-See the project `docs/production-deployment.md` for backup, migration, validation, and rollback.
+- Yoto browser PKCE authentication
+- Music cards as albums and ordered tracks
+- Story and sleep cards as seekable audiobooks with resume support
+- Search, browse, artwork, groups, and automatic library refresh
+- Fresh signed media URLs resolved only for playback
+- Separate add-on slug and application-data directory for reversible installation
+
+This project is not affiliated with, supported by, or endorsed by Yoto.
+
+Do not run this add-on and the stock Music Assistant add-on simultaneously; both use host networking and the same ports.
+
+See the [project README](https://github.com/m4rkireland/music-assistant-yoto) for setup, security, upgrade, and rollback instructions.

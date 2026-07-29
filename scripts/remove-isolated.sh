@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MA_SERVER=${1:-/home/dave/work/music-assistant-yoto-reference/server}
+ROOT=$(cd "$(dirname "$0")/.." && pwd)
+MA_SERVER=${1:-${MA_SERVER:-$ROOT/.music-assistant-server}}
 TARGET="$MA_SERVER/music_assistant/providers/yoto"
 
 if [[ -L "$TARGET" ]]; then

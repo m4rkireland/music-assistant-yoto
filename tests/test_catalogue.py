@@ -22,6 +22,8 @@ def test_catalogue_preserves_card_chapter_track_order_with_reversible_ids() -> N
     card = catalogue.cards["card-alpha"]
     assert card.title == "Moshi Moon"
     assert card.author == "Dream Reader"
+    assert card.is_audiobook
+    assert not catalogue.cards["card-beta"].is_audiobook
     assert [track.title for track in card.tracks] == ["Second", "Third", "First"]
     assert [(track.chapter_number, track.track_number) for track in card.tracks] == [
         (1, 1),
@@ -54,6 +56,20 @@ def test_decode_track_id_rejects_malformed_ids(item_id: str) -> None:
 def test_catalogue_rejects_malformed_library_response() -> None:
     with pytest.raises(ValueError, match="cards list"):
         Catalogue.from_responses({}, {})
+
+
+@pytest.mark.parametrize(
+    ("category", "expected"),
+    [("stories", True), ("Story", True), ("SLEEP", True), ("music", False), (None, False)],
+)
+def test_card_classifies_only_known_story_categories_as_audiobooks(
+    category: str | None, expected: bool
+) -> None:
+    card = Card(id="card-a", title="Card", category=category)
+
+    catalogue = Catalogue.from_yoto_models({"card-a": card}, {})
+
+    assert catalogue.cards["card-a"].is_audiobook is expected
 
 
 def test_catalogue_from_yoto_models_preserves_metadata_and_drops_stream_url() -> None:

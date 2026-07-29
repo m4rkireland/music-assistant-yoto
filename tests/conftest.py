@@ -5,9 +5,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
-MA_SERVER = Path(
-    os.environ.get("MA_SERVER", "/home/dave/work/music-assistant-yoto-reference/server")
-)
+ROOT = Path(__file__).parents[1]
+MA_SERVER = Path(os.environ.get("MA_SERVER", ROOT / ".music-assistant-server"))
 
 
 def _namespace(name: str, path: Path) -> None:

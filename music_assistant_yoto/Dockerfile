@@ -2,7 +2,7 @@
 
 FROM ghcr.io/music-assistant/server:2.9.9@sha256:50666a6f8d7f87d53d993dc41860ab06dda11047f6e433bb5bdbcb6e309ac74c
 
-ARG BUILD_VERSION=2.9.9-yoto.4
+ARG BUILD_VERSION=2.9.9-yoto.5
 ARG BUILD_ARCH
 
 COPY yoto/ /tmp/yoto/
@@ -22,7 +22,7 @@ RUN set -eux; \
 LABEL io.hass.version="${BUILD_VERSION}" \
       io.hass.type="app" \
       io.hass.arch="${BUILD_ARCH}" \
-      org.opencontainers.image.title="Music Assistant 2.9.9 with private Yoto provider" \
+      org.opencontainers.image.title="Music Assistant 2.9.9 with Yoto provider" \
       org.opencontainers.image.version="${BUILD_VERSION}" \
       org.opencontainers.image.base.digest="sha256:50666a6f8d7f87d53d993dc41860ab06dda11047f6e433bb5bdbcb6e309ac74c" \
       org.opencontainers.image.source="https://github.com/m4rkireland/music-assistant-yoto"

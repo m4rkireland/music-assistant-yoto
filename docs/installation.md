@@ -1,68 +1,75 @@
 # Installation, upgrade, and rollback
 
-## Supported private deployment shape
+## Home Assistant installation
 
-The provider must exist as a directory named `yoto` under the exact Music Assistant Python package's `music_assistant/providers/` directory. Music Assistant 2.9.9 has no stable external-provider plug-in directory, so a private production deployment will require a derived image or custom add-on that layers this directory onto the stock server image.
+The repository contains a separate Home Assistant add-on that layers the Yoto provider onto the immutable Music Assistant Server `2.9.9` image.
 
-Do **not** patch a running stock add-on container: container changes are ephemeral, difficult to audit, and unsafe to roll back.
+1. Create a Home Assistant backup.
+2. Add `https://github.com/m4rkireland/music-assistant-yoto` as a custom App Store repository.
+3. Install **Music Assistant Yoto**.
+4. Stop the stock Music Assistant add-on before starting Music Assistant Yoto.
+5. Start Music Assistant Yoto and open its web interface.
+6. Configure the Yoto provider as described in the project README.
 
-## Isolated 2.9.9 verification
+The custom add-on and stock add-on have different slugs and separate application-data directories. Do not run both simultaneously because both use host networking and the same Music Assistant ports.
 
-```bash
-git clone https://github.com/music-assistant/server.git /path/to/ma-server
-cd /path/to/ma-server
-git checkout 2.9.9
-/path/to/music-assistant-yoto/scripts/install-isolated.sh /path/to/ma-server
-./scripts/setup.sh .venv-yoto-isolated
-uv pip install --python .venv-yoto-isolated/bin/python 'yoto-api==4.3.2'
-PYTHONDEVMODE=1 .venv-yoto-isolated/bin/python -m music_assistant \
-  --data-dir /path/to/isolated-data \
-  --cache-dir /path/to/isolated-cache \
-  --log-level debug
-```
+## Existing Music Assistant installations
 
-Open the isolated UI on port 8095, create a disposable local administrator, then open **Settings → Music sources → Add a music source → Yoto**. The setup page must show the unofficial warning, client-ID field, and authorization action.
+The safest default is a fresh Music Assistant Yoto configuration. To retain an existing Music Assistant library and provider configuration, migrate the application data while both add-ons are stopped, then start only Music Assistant Yoto.
 
-Removal is reversible:
-
-```bash
-/path/to/music-assistant-yoto/scripts/remove-isolated.sh /path/to/ma-server
-rm -rf /path/to/isolated-data /path/to/isolated-cache
-```
-
-## Proposed production method — not yet approved
-
-1. Pin the stock Music Assistant server/add-on image corresponding to 2.9.9.
-2. Build a derived image that copies only the reviewed `yoto/` directory into `music_assistant/providers/yoto/`.
-3. Install `yoto-api==4.3.2` in the image, rather than at runtime.
-4. Publish the image with an immutable version tag and digest.
-5. Point a dedicated custom Home Assistant add-on repository/slug at that image; do not overwrite the stock add-on slug or data directory.
-6. Back up the Music Assistant data directory before first start.
-7. Validate provider discovery, existing provider/player inventory, Yoto authentication, library counts, search, and one explicitly approved playback.
-
-No production image, add-on, config, or restart may be performed without Mark's explicit approval after reviewing the exact Dockerfile/add-on changes and image digest.
+Application-data migration is platform-specific. Always preserve the original stock add-on data and a Home Assistant backup until the new add-on has passed the validation checklist.
 
 ## Upgrade
 
-- Build a new immutable derived-image tag from a reviewed provider commit.
-- Run `scripts/check.sh` and repeat isolated discovery/account-sync verification.
-- Stop the custom add-on, switch only its image tag, start it, and run the smoke checklist.
-- Never mutate the old image tag.
+1. Create a Home Assistant backup.
+2. Refresh the custom repository in the App Store.
+3. Review the add-on changelog.
+4. Apply the available Music Assistant Yoto update.
+5. Confirm the server reaches `running` state and the Yoto provider loads after restart.
+6. Run a manual Yoto library synchronization when a release changes media mapping.
+
+Source releases are immutable once published. Each provider update increments the add-on version.
 
 ## Rollback
 
-1. Stop the custom add-on.
-2. Restore its prior immutable image tag/digest.
-3. Restore the pre-change Music Assistant data backup only if a schema/data migration occurred or validation shows corruption.
-4. Start the previous image and verify existing music and player providers.
-5. The stock add-on remains available because its slug/image was never overwritten.
+### Roll back to an earlier Music Assistant Yoto version
 
-## Smoke checklist
+1. Stop Music Assistant Yoto.
+2. Restore the Home Assistant backup created before the update.
+3. Start Music Assistant Yoto and verify providers and players.
 
-- Server reports expected version and reaches ready state.
-- Existing production providers and players are unchanged.
-- Yoto provider loads without errors.
-- Expected card/track counts are present.
-- `Moshi` returns the expected card and ordered tracks.
-- A fresh stream resolves with no signed URL in logs.
-- Only after separate approval: selected track plays on the specified Sonos with correct state and metadata.
+### Return to stock Music Assistant
+
+1. Stop Music Assistant Yoto and disable its watchdog/automatic start.
+2. Restore or retain the stock Music Assistant application data.
+3. Start the stock Music Assistant add-on.
+4. Confirm only one Music Assistant server is running.
+
+## Validation checklist
+
+- Music Assistant reports server version `2.9.9` and status `running`.
+- Only one Music Assistant add-on is running.
+- Existing music and player providers load.
+- Yoto loads without an authentication error after restart.
+- Music cards appear under albums; story/sleep cards appear under audiobooks.
+- Audiobook artwork, authors, chapters, duration, seeking, and resume position are correct.
+- A manual synchronization discovers newly linked cards.
+- Playback succeeds and no signed URL or OAuth credential appears in logs.
+
+## Isolated development installation
+
+```bash
+git clone --depth 1 --branch 2.9.9 \
+  https://github.com/music-assistant/server.git \
+  .music-assistant-server
+
+./scripts/install-isolated.sh
+```
+
+The script creates a reversible provider symlink only inside the exact `2.9.9` source checkout. Remove it with:
+
+```bash
+./scripts/remove-isolated.sh
+```
+
+Set `MA_SERVER=/path/to/server` or pass the source path as the first argument to either script.

@@ -27,3 +27,18 @@ async def test_setup_entry_point_returns_provider() -> None:
     import yoto
 
     assert inspect.iscoroutinefunction(yoto.setup)
+
+
+def test_public_files_are_environment_agnostic_and_current() -> None:
+    public_files = [
+        ROOT / "README.md",
+        *(ROOT / "docs").glob("*.md"),
+        *(ROOT / "scripts").glob("*.sh"),
+        ROOT / "tests" / "conftest.py",
+        ROOT / "music_assistant_yoto" / "README.md",
+        ROOT / "music_assistant_yoto" / "Dockerfile",
+        ROOT / "music_assistant_yoto" / "config.yaml",
+    ]
+    combined = "\n".join(path.read_text() for path in public_files if path.exists()).casefold()
+
+    assert "/home/" not in combined

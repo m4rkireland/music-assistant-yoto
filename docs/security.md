@@ -1,27 +1,50 @@
 # Security and data handling
 
-## Secrets
+## Authentication
 
-- The user supplies a Yoto developer OAuth client ID; no client secret or Yoto password is requested.
-- The refresh token is stored in a Music Assistant `SECURE_STRING` config entry.
-- Refresh tokens are single-use and rotated. The replacement token is persisted immediately after refresh.
-- Access tokens, refresh tokens, PKCE verifiers, authorization codes, and signed stream URLs are excluded from provider-model representations and sanitized exception messages.
-- PKCE verifiers remain server-side in short-lived setup-session state and are never sent to the browser as configuration values.
+- The user supplies a Yoto OAuth client ID. No client secret, Yoto password, or Home Assistant credential is requested.
+- Authorization uses the browser Authorization Code flow with PKCE.
+- Requested scopes are limited to `family:library:view` and `offline_access`.
+- The PKCE verifier and pending authorization state remain in the server-side setup session.
+- Refresh tokens are stored in a Music Assistant `SECURE_STRING` configuration entry.
+- Rotated refresh tokens are encrypted and flushed to configuration immediately.
 
 ## Signed media URLs
 
-A signed URL is fetched only when `get_stream_details` is called. It is returned internally to Music Assistant for playback but is never put in an album/track object, provider mapping, catalogue snapshot, configuration field, fixture, diagnostic, or log message. Debugging must report only non-secret facts such as host, content type, and HTTP status.
+Yoto media URLs are short-lived credentials. The provider fetches them only while preparing playback.
 
-## Read-only scope
+Signed URLs are never added to:
 
-The provider calls library, group, card-detail, OAuth, and refresh operations only. It does not connect to Yoto MQTT, control Yoto players, or call card/account/device write operations.
+- catalogue snapshots;
+- albums, tracks, audiobooks, or chapter metadata;
+- provider mappings;
+- provider configuration;
+- fixtures or documentation;
+- application log messages.
 
-## External-policy risks
+For multi-part audiobooks, current URLs are resolved for the ordered audio parts at playback setup and passed directly to Music Assistant's stream pipeline.
 
-- The private family-library/card endpoints may change and are not all in Yoto's current public API reference.
-- The provider uses Yoto's currently recommended browser PKCE flow. Its localhost callback-copy UX is suitable for private setup but should be replaced with a polished loopback or registered HTTPS callback before upstream submission.
-- Users remain responsible for Yoto terms, account permissions, and content rights.
+## Resume positions
+
+Audiobook progress is stored in Music Assistant's local playlog. The provider does not send progress, completion state, favorites, library edits, or playback commands to Yoto.
+
+## Read-only API surface
+
+The provider uses authentication, token refresh, family-library, card-detail, and library-group operations. It does not connect to Yoto MQTT, control Yoto players, or call account, device, card, playlist, or library mutation endpoints.
+
+## Operational considerations
+
+- Some family-library and card-detail interfaces used by `yoto-api` are not represented in Yoto's public API reference and may change.
+- Content availability depends on the authenticated account and its rights.
+- Unknown Yoto categories remain albums; only the recognized `stories`, `story`, and `sleep` values are mapped as audiobooks.
+- Debug logs should report only non-secret information such as provider state, media type, host, content format, and HTTP status.
 
 ## Incident response
 
-If a signed URL or OAuth token is ever logged: stop the test instance, delete the affected logs, revoke/rotate the Yoto authorization, remove the provider config, and reauthorize. Treat refresh-token persistence failures as authentication failures; do not retry using an already-consumed old token indefinitely.
+If an OAuth credential or signed media URL is exposed:
+
+1. Stop the affected Music Assistant instance.
+2. Remove the affected logs or diagnostics from shared storage.
+3. Revoke the Yoto authorization.
+4. Remove and reconfigure the Yoto provider.
+5. Verify that the replacement refresh token persists across restart.

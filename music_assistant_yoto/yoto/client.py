@@ -161,6 +161,35 @@ class YotoAdapter:
         except Exception as err:
             raise ProviderUnavailableError("Yoto stream is unavailable") from err
 
+    async def resolve_audiobook(self, card_id: str) -> tuple[ResolvedStream, ...]:
+        """Refetch one card and return all current streams in source order."""
+        await self.ensure_authenticated()
+        try:
+            await self._api.update_card_detail(card_id)
+            card = self._api.library[card_id]
+            streams: list[ResolvedStream] = []
+            for chapter in card.chapters.values():
+                for track in chapter.tracks.values():
+                    if getattr(track, "type", None) not in (None, "audio"):
+                        continue
+                    path = track.trackUrl
+                    if not isinstance(path, str) or not path.startswith("https://"):
+                        raise ProviderUnavailableError("Yoto audiobook stream is unavailable")
+                    streams.append(
+                        ResolvedStream(
+                            path=path,
+                            duration=track.duration or 0,
+                            format=track.format,
+                        )
+                    )
+            if not streams:
+                raise ProviderUnavailableError("Yoto audiobook has no playable streams")
+            return tuple(streams)
+        except ProviderUnavailableError:
+            raise
+        except Exception as err:
+            raise ProviderUnavailableError("Yoto audiobook stream is unavailable") from err
+
     async def _persist_token(self, refresh_token: str) -> None:
         self._refresh_token = refresh_token
         if self._token_callback is not None:

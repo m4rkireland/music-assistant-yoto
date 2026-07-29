@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.9.9-yoto.5
+
+- Map story and sleep cards to seekable Music Assistant audiobooks.
+- Preserve ordered Yoto audio parts as an audiobook chapter timeline.
+- Use Music Assistant's local playlog for audiobook resume positions.
+- Keep music and unclassified cards as albums with ordered tracks.
+- Rewrite public documentation and remove environment-specific development artifacts.
+
 ## 2.9.9-yoto.4
 
 - Remove the unreliable browser-push authentication event.

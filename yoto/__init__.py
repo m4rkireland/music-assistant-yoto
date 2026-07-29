@@ -92,7 +92,8 @@ async def get_config_entries(
             type=ConfigEntryType.ALERT,
             label=(
                 "This is an unofficial integration that is not affiliated with Yoto, is not "
-                "supported by Yoto, and is not endorsed by Yoto. It relies on private interfaces "
+                "supported by Yoto, and is not endorsed by Yoto. It relies on undocumented "
+                "interfaces "
                 "that may change without notice and use may be subject to Yoto's terms."
             ),
             required=False,

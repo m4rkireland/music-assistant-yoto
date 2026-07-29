@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-MA_SERVER=${MA_SERVER:-/home/dave/work/music-assistant-yoto-reference/server}
+MA_SERVER=${MA_SERVER:-$ROOT/.music-assistant-server}
 VENV=${VENV:-$ROOT/.venv}
 RUNTIME_VENV=${RUNTIME_VENV:-$MA_SERVER/.venv-yoto-isolated}
 
