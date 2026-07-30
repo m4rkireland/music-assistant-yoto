@@ -93,7 +93,7 @@ class Catalogue:
                 title=_text(_child(card_data, "title")) or card_id,
                 description=_optional_text(_child(metadata, "description")),
                 author=_optional_text(_child(metadata, "author")),
-                category=_optional_text(_child(metadata, "stories")),
+                category=_optional_text(_child(metadata, "category")),
                 artwork=_optional_text(_child(cover, "imageL")),
                 series_title=_optional_text(_child(cover, "seriestitle")),
                 series_order=_optional_int(_child(cover, "seriesorder")),

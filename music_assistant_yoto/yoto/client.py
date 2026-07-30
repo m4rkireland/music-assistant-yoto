@@ -19,6 +19,7 @@ class YotoClientProtocol(Protocol):
     """Subset of yoto-api used by the provider."""
 
     token: Any
+    _rest: Any
     library: dict[str, Any]
     groups: dict[str, Any]
 
@@ -130,6 +131,11 @@ class YotoAdapter:
         await self.ensure_authenticated()
         try:
             await self._api.update_library()
+            token = self._api.token
+            if token is None:
+                raise ProviderUnavailableError("Yoto library token is unavailable")
+            raw_library = await self._api._rest.get_card_library(token)
+            _restore_card_categories(self._api.library, raw_library)
             for card_id in tuple(self._api.library):
                 await self._api.update_card_detail(card_id)
             await self._api.update_groups()
@@ -172,3 +178,29 @@ class YotoAdapter:
             result = self._token_callback(refresh_token)
             if inspect.isawaitable(result):
                 await result
+
+
+def _restore_card_categories(library: Mapping[str, Any], response: Mapping[str, Any]) -> None:
+    """Restore categories omitted by yoto-api 4.3.2's library parser."""
+    cards = response.get("cards")
+    if not isinstance(cards, list):
+        return
+    for raw_card in cards:
+        if not isinstance(raw_card, Mapping):
+            continue
+        card_id = _nested_value(raw_card, "cardId")
+        category = _nested_value(raw_card, "card", "metadata", "category")
+        card = library.get(card_id) if isinstance(card_id, str) else None
+        if card is not None and isinstance(category, str):
+            card.category = category
+
+
+def _nested_value(value: Mapping[str, Any], *keys: str) -> Any:
+    current: Any = value
+    for key in keys:
+        if not isinstance(current, Mapping):
+            return None
+        current = current.get(key)
+        if isinstance(current, Mapping) and set(current) == {"value"}:
+            current = current["value"]
+    return current

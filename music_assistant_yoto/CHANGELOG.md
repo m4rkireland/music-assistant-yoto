@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.9.9-yoto.8
+
+- Read the live `card.metadata.category` field so story and sleep cards are
+  imported as native audiobooks with `yoto-api` 4.3.2.
+
 ## 2.9.9-yoto.7
 
 - Represent Yoto story and sleep cards as native Music Assistant audiobooks.
