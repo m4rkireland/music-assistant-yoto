@@ -461,7 +461,7 @@ def map_track(card: CatalogueCard, source: CatalogueTrack, instance_id: str) -> 
         duration=source.duration,
         artists=UniqueList([artist]),
         album=album,
-        disc_number=source.chapter_number,
+        disc_number=1,
         track_number=source.track_number,
         provider_mappings={
             _mapping(source.item_id, instance_id, source.format, available=source.duration > 0)

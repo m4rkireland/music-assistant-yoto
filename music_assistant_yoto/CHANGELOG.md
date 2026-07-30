@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.9.9-yoto.9
+
+- Present every non-audiobook Yoto card as one Music Assistant disc with its
+  flattened Yoto audio entries as sequential tracks.
+
 ## 2.9.9-yoto.8
 
 - Read the live `card.metadata.category` field so story and sleep cards are
