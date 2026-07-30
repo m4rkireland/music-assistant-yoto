@@ -23,7 +23,7 @@ def test_addon_bundles_exact_reviewed_provider_source() -> None:
 def test_addon_is_separate_reversible_and_cold_backed_up() -> None:
     config = (ADDON / "config.yaml").read_text()
 
-    assert "version: 2.9.9-yoto.8" in config
+    assert "version: 2.9.9-yoto.9" in config
     assert "slug: music_assistant_yoto" in config
     assert "slug: music_assistant\n" not in config
     assert "stage: experimental" in config

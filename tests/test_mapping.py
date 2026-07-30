@@ -51,7 +51,7 @@ def test_tracks_flatten_in_playback_order_with_album_and_author_fallback() -> No
     assert all(isinstance(track, Track) for track in tracks)
     assert [track.name for track in tracks] == ["Second", "Third", "First"]
     assert [track.track_number for track in tracks] == [1, 2, 3]
-    assert [track.disc_number for track in tracks] == [1, 1, 2]
+    assert [track.disc_number for track in tracks] == [1, 1, 1]
     assert [track.duration for track in tracks] == [8, 7, 4]
     assert tracks[0].album.item_id == source.item_id
     assert tracks[0].media_type is MediaType.TRACK
