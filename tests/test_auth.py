@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from music_assistant_models.enums import ConfigEntryType
 from music_assistant_models.errors import LoginFailed
+from yoto_api import Card
 
 from yoto import (
     CONF_ACTION_AUTH,
@@ -182,6 +183,54 @@ async def test_api_use_refreshes_first_and_persists_rotated_token() -> None:
 
     assert fake.calls == ["refresh"]
     assert saved == ["fixture-rotated-refresh"]
+
+
+@pytest.mark.asyncio
+async def test_catalogue_uses_live_metadata_category_despite_yoto_api_parser_bug() -> None:
+    class FakeRest:
+        async def get_card_library(self, _token: FakeToken) -> dict[str, Any]:
+            return {
+                "cards": [
+                    {
+                        "cardId": {"value": "story-card"},
+                        "card": {"metadata": {"category": {"value": "stories"}}},
+                    },
+                    {
+                        "cardId": {"value": "music-card"},
+                        "card": {"metadata": {"category": {"value": "music"}}},
+                    },
+                ]
+            }
+
+    class FakeCategoryClient(FakeYotoClient):
+        def __init__(self) -> None:
+            super().__init__()
+            self._rest = FakeRest()
+
+        async def update_library(self) -> None:
+            self.library = {
+                "story-card": Card(id="story-card", title="Story", category=None),
+                "music-card": Card(id="music-card", title="Music", category=None),
+            }
+
+        async def update_card_detail(self, _card_id: str) -> None:
+            return None
+
+        async def update_groups(self) -> None:
+            return None
+
+    adapter = YotoAdapter(
+        "fixture-client-id",
+        refresh_token="fixture-refresh",
+        api=FakeCategoryClient(),
+    )
+
+    catalogue = await adapter.refresh_catalogue()
+
+    assert catalogue.cards["story-card"].category == "stories"
+    assert catalogue.cards["story-card"].is_audiobook is True
+    assert catalogue.cards["music-card"].category == "music"
+    assert catalogue.cards["music-card"].is_audiobook is False
 
 
 @pytest.mark.asyncio

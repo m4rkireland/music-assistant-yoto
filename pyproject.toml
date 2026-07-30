@@ -1,6 +1,6 @@
 [project]
 name = "music-assistant-yoto"
-version = "0.3.0"
+version = "0.3.1"
 description = "A read-only Yoto card-library provider for Music Assistant"
 requires-python = ">=3.14"
 dependencies = [

@@ -7,7 +7,7 @@
         "metadata": {
           "description": {"value": "Calm bedtime stories"},
           "author": {"value": "Dream Reader"},
-          "stories": {"value": "sleep"},
+          "category": {"value": "sleep"},
           "cover": {
             "imageL": {"value": "fixture-artwork-card-alpha"},
             "seriestitle": {"value": "Moshi"},
