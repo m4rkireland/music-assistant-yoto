@@ -5,12 +5,11 @@ An experimental Music Assistant `2.9.9` add-on containing the unofficial, read-o
 ## Features
 
 - Browser-based Yoto PKCE authentication
-- Yoto cards represented as albums with ordered tracks
+- Story and sleep cards represented as seekable audiobooks with Music Assistant resume support
+- Music and unclassified cards represented as albums with ordered tracks
 - Search, browse, artwork, groups, and library synchronization
 - Fresh signed media URLs resolved only when playback starts
 - Separate add-on data from the stock Music Assistant installation
-
-Native audiobook representation and resume semantics are not currently implemented.
 
 This project is not affiliated with, supported by, or endorsed by Yoto.
 

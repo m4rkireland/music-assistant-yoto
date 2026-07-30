@@ -2,7 +2,7 @@
 
 FROM ghcr.io/music-assistant/server:2.9.9@sha256:50666a6f8d7f87d53d993dc41860ab06dda11047f6e433bb5bdbcb6e309ac74c
 
-ARG BUILD_VERSION=2.9.9-yoto.6
+ARG BUILD_VERSION=2.9.9-yoto.7
 ARG BUILD_ARCH
 
 COPY yoto/ /tmp/yoto/

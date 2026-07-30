@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.9.9-yoto.7
+
+- Represent Yoto story and sleep cards as native Music Assistant audiobooks.
+- Preserve Yoto chapter boundaries on a seekable multipart timeline.
+- Use Music Assistant's local resume and completion state.
+- Resolve every audiobook part to a fresh signed URL only when that part starts.
+- Keep music and unclassified cards as albums with ordered tracks.
+- Use short-lived, audiobook-scoped capability URLs for fresh per-part stream resolution.
+- Serialize simultaneous album, track, and audiobook syncs around one shared catalogue refresh.
+- Mark unknown or incompatible multipart stream properties unavailable instead of risking corrupt concatenated playback.
+
 ## 2.9.9-yoto.6
 
 - Restore the established album-and-track model for every Yoto card.

@@ -46,7 +46,8 @@ Application-data paths are managed by Home Assistant Supervisor and vary by inst
 3. Refresh the custom repository in the App Store.
 4. Install the available update.
 5. Confirm Music Assistant reaches the `running` state and the Yoto provider loads.
-6. Run a manual Yoto synchronization when a release changes catalogue mapping.
+6. When upgrading from an album-based release to audiobook support, run manual Yoto synchronization for audiobooks, albums, and tracks. This imports native audiobook rows and retires the former story-card album and track mappings.
+7. Verify that story cards appear under audiobooks and no duplicate story albums or tracks remain. If deletion synchronization was disabled, re-enable it for the migration or remove the stale library entries manually.
 
 ## Return to stock Music Assistant
 

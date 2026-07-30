@@ -145,6 +145,11 @@ class YotoAdapter:
             raise ProviderUnavailableError("Invalid Yoto track identifier") from err
         await self.ensure_authenticated()
         try:
+            try:
+                stale_track = self._api.library[card_id].chapters[chapter_key].tracks[track_key]
+                stale_track.trackUrl = None
+            except AttributeError, KeyError, TypeError:
+                pass
             await self._api.update_card_detail(card_id)
             card = self._api.library[card_id]
             track = card.chapters[chapter_key].tracks[track_key]
