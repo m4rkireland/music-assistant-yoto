@@ -8,7 +8,9 @@ An experimental, unofficial, read-only provider that makes a family's Yoto card 
 
 - Browser-based Yoto authentication using Authorization Code with PKCE
 - No Yoto password or OAuth client secret required
-- Cards represented as Music Assistant albums with ordered tracks
+- Story and sleep cards represented as Music Assistant audiobooks
+- Yoto chapters represented as seekable audiobook chapters with local resume and completion state
+- Music and unclassified cards represented as albums with ordered tracks
 - Card artwork, titles, authors, series, chapters, durations, and library groups
 - Search and browse support
 - Automatic catalogue refresh during Music Assistant library synchronization
@@ -16,11 +18,11 @@ An experimental, unofficial, read-only provider that makes a family's Yoto card 
 - Encrypted refresh-token storage with immediate persistence after token rotation
 - Read-only operation: the provider never changes the Yoto account or library
 
-## Current media model
+## Media model
 
-Every Yoto card is represented as a Music Assistant album. The card's playable content is exposed as ordered tracks; Yoto chapter order is preserved through disc and track numbering.
+Cards classified by Yoto as `story`, `stories`, or `sleep` are represented as Music Assistant audiobooks. Their ordered audio parts form one seekable timeline, while Yoto chapter boundaries and titles are preserved as audiobook chapters. Music Assistant stores resume positions and completion state in its local playlog; the provider does not write progress to Yoto.
 
-This compatibility model works for music and story cards without requiring changes to Music Assistant's media model. Native audiobook representation, chapter-aware resume positions, and audiobook completion state are not implemented. They are potential future enhancements.
+Music and unclassified cards remain albums with ordered tracks. Unknown categories are not guessed as audiobooks.
 
 ## Compatibility
 
@@ -66,13 +68,13 @@ The PKCE verifier remains in the server-side setup session. Music Assistant stor
 
 Music Assistant synchronizes provider libraries every 12 hours by default. Run a manual Yoto provider synchronization to import newly linked cards sooner.
 
-Each synchronization refreshes the Yoto family library before importing albums and tracks. The provider does not use a webhook and changes are not immediate.
+Each synchronization refreshes the Yoto family library before importing albums, tracks, and audiobooks. The provider does not use a webhook and changes are not immediate.
 
 ## Limitations
 
 - The provider is experimental and tested against Music Assistant `2.9.9`.
-- All cards currently use the album-and-track media model, including stories and other spoken-word content.
-- Native audiobook resume and completion semantics are not available.
+- Media classification depends on Yoto's category metadata. Unknown categories remain albums.
+- Audiobook parts must report the same normalized format and channel layout. Cards with missing or incompatible stream properties are shown but marked unavailable because Music Assistant 2.9.9 cannot safely concatenate them.
 - Yoto's family-library and card-detail interfaces are not all covered by its public API reference and may change.
 - The browser callback URL must currently be copied back into Music Assistant to complete authentication.
 

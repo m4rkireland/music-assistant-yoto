@@ -39,6 +39,8 @@ The provider does not log:
 
 Yoto playback URLs are signed and time-limited. The provider resolves a fresh URL when Music Assistant prepares a track for playback.
 
+For multipart audiobooks, Music Assistant receives opaque internal part URLs rather than Yoto track identifiers or signed URLs. Each playback creates a random capability token bound to one audiobook and its exact ordered parts. The token expires after the audiobook's duration plus a short playback buffer, is removed when expired, and is revoked when the provider unloads. A valid capability resolves only its assigned part to a fresh signed Yoto URL when that part begins. Repeated requests for an assigned part are intentionally allowed only during that live scoped session because FFmpeg may probe or retry an input; they cannot extend the session expiry or request a different audiobook.
+
 Signed media URLs are not stored in:
 
 - album or track metadata;
@@ -46,6 +48,8 @@ Signed media URLs are not stored in:
 - provider configuration;
 - test fixtures;
 - application logs.
+
+Internal capability URLs are temporary playback data. They should not be published or included in diagnostics even though they do not contain Yoto credentials or stable track identifiers.
 
 ## Data retained by Music Assistant
 

@@ -45,7 +45,7 @@ def test_public_files_are_environment_agnostic_and_current() -> None:
     assert "/home/" not in combined
     assert "nfc" not in combined
     assert "tag player" not in combined
-    assert "every yoto card is represented as a music assistant album" in readme
-    assert "native audiobook representation" in readme
-    assert "not implemented" in readme
-    assert "story and sleep cards represented as seekable audiobooks" not in combined
+    assert "represented as music assistant audiobooks" in readme
+    assert "seekable audiobook chapters" in readme
+    assert "resume positions and completion state" in readme
+    assert "unknown categories are not guessed as audiobooks" in readme
