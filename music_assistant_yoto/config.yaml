@@ -1,5 +1,5 @@
 name: Music Assistant Yoto
-version: 2.9.9-yoto.9
+version: 2.9.9-yoto.10
 slug: music_assistant_yoto
 description: >-
   Music Assistant 2.9.9 with the experimental unofficial read-only Yoto
@@ -26,7 +26,6 @@ map:
   - ssl:ro
 init: false
 tmpfs: true
-backup: cold
 backup_exclude:
   - cache.db
   - collage_images/*

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.9.9-yoto.10
+
+- Keep Music Assistant running during Home Assistant and hypervisor backup
+  freezes by matching the official add-on's hot-backup behaviour.
+
 ## 2.9.9-yoto.9
 
 - Present every non-audiobook Yoto card as one Music Assistant disc with its
