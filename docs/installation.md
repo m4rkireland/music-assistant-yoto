@@ -85,7 +85,7 @@ uv pip install --python .venv/bin/python -e '.[dev]'
 )
 uv pip install \
   --python .music-assistant-server/.venv-yoto-isolated/bin/python \
-  'yoto-api==4.3.2'
+  'yoto-api==4.3.3'
 
 ./scripts/check.sh
 ```

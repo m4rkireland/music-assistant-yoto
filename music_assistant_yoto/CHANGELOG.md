@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.9.9-yoto.11
+
+- Upgrade to `yoto-api` 4.3.3, which natively preserves live card categories.
+- Remove the provider's temporary private `_rest` category-recovery workaround.
+
 ## 2.9.9-yoto.10
 
 - Keep Music Assistant running during Home Assistant and hypervisor backup

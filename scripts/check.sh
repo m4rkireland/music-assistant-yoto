@@ -35,7 +35,7 @@ from pathlib import Path
 provider = importlib.import_module("yoto")
 manifest = json.loads((Path(provider.__file__).parent / "manifest.json").read_text())
 assert manifest["domain"] == "yoto"
-assert manifest["requirements"] == ["yoto-api==4.3.2"]
+assert manifest["requirements"] == ["yoto-api==4.3.3"]
 assert callable(provider.setup)
 assert callable(provider.get_config_entries)
 print("Music Assistant 2.9.9 provider contract import: PASS")

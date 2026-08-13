@@ -23,7 +23,7 @@ def test_addon_bundles_exact_reviewed_provider_source() -> None:
 def test_addon_is_separate_reversible_and_hot_backed_up() -> None:
     config = (ADDON / "config.yaml").read_text()
 
-    assert "version: 2.9.9-yoto.10" in config
+    assert "version: 2.9.9-yoto.11" in config
     assert "slug: music_assistant_yoto" in config
     assert "slug: music_assistant\n" not in config
     assert "stage: experimental" in config
@@ -35,7 +35,8 @@ def test_image_pins_official_299_index_and_checks_packaged_provider() -> None:
     dockerfile = (ADDON / "Dockerfile").read_text()
 
     assert f"2.9.9@{BASE_INDEX}" in dockerfile
-    assert '"yoto-api==4.3.2"' in dockerfile
+    assert "ARG BUILD_VERSION=2.9.9-yoto.11" in dockerfile
+    assert '"yoto-api==4.3.3"' in dockerfile
     assert "manifest.json" in dockerfile
     assert 'io.hass.type="app"' in dockerfile
     for name in ("client.py", "catalogue.py", "provider.py", "pkce.py"):

@@ -186,31 +186,12 @@ async def test_api_use_refreshes_first_and_persists_rotated_token() -> None:
 
 
 @pytest.mark.asyncio
-async def test_catalogue_uses_live_metadata_category_despite_yoto_api_parser_bug() -> None:
-    class FakeRest:
-        async def get_card_library(self, _token: FakeToken) -> dict[str, Any]:
-            return {
-                "cards": [
-                    {
-                        "cardId": {"value": "story-card"},
-                        "card": {"metadata": {"category": {"value": "stories"}}},
-                    },
-                    {
-                        "cardId": {"value": "music-card"},
-                        "card": {"metadata": {"category": {"value": "music"}}},
-                    },
-                ]
-            }
-
+async def test_catalogue_uses_categories_parsed_by_yoto_api() -> None:
     class FakeCategoryClient(FakeYotoClient):
-        def __init__(self) -> None:
-            super().__init__()
-            self._rest = FakeRest()
-
         async def update_library(self) -> None:
             self.library = {
-                "story-card": Card(id="story-card", title="Story", category=None),
-                "music-card": Card(id="music-card", title="Music", category=None),
+                "story-card": Card(id="story-card", title="Story", category="stories"),
+                "music-card": Card(id="music-card", title="Music", category="music"),
             }
 
         async def update_card_detail(self, _card_id: str) -> None:
