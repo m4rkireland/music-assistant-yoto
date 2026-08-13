@@ -28,7 +28,7 @@ Music and unclassified cards remain albums with ordered tracks. Unknown categori
 
 - Music Assistant Server `2.9.9`
 - Python `3.14`
-- `yoto-api==4.3.2`
+- `yoto-api==4.3.3`
 - Home Assistant add-on architectures: `amd64` and `aarch64`
 
 ## Home Assistant installation
