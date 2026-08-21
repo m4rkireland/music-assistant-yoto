@@ -12,8 +12,8 @@ if [[ ! -f "$MA_SERVER/music_assistant/models/music_provider.py" ]]; then
 fi
 
 actual_tag=$(git -C "$MA_SERVER" describe --tags --exact-match 2>/dev/null || true)
-if [[ "$actual_tag" != "2.9.9" ]]; then
-  echo "Expected Music Assistant tag 2.9.9, found ${actual_tag:-untagged}" >&2
+if [[ "$actual_tag" != "2.9.13" ]]; then
+  echo "Expected Music Assistant tag 2.9.13, found ${actual_tag:-untagged}" >&2
   exit 1
 fi
 
@@ -38,5 +38,5 @@ assert manifest["domain"] == "yoto"
 assert manifest["requirements"] == ["yoto-api==4.3.3"]
 assert callable(provider.setup)
 assert callable(provider.get_config_entries)
-print("Music Assistant 2.9.9 provider contract import: PASS")
+print("Music Assistant 2.9.13 provider contract import: PASS")
 PY

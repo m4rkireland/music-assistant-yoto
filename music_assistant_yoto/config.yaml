@@ -1,8 +1,8 @@
 name: Music Assistant Yoto
-version: 2.9.9-yoto.11
+version: 2.9.13-yoto.12
 slug: music_assistant_yoto
 description: >-
-  Music Assistant 2.9.9 with the experimental unofficial read-only Yoto
+  Music Assistant 2.9.13 with the experimental unofficial read-only Yoto
   provider layered onto the immutable official server image.
 url: https://github.com/m4rkireland/music-assistant-yoto
 arch:

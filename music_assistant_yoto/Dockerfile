@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/music-assistant/server:2.9.9@sha256:50666a6f8d7f87d53d993dc41860ab06dda11047f6e433bb5bdbcb6e309ac74c
+FROM ghcr.io/music-assistant/server:2.9.13@sha256:5ded610a2804fb7a973d2cbe390df09ceb67f0d7f603bcacd21ebaaa5a8a9b62
 
-ARG BUILD_VERSION=2.9.9-yoto.11
+ARG BUILD_VERSION=2.9.13-yoto.12
 ARG BUILD_ARCH
 
 COPY yoto/ /tmp/yoto/
@@ -22,7 +22,7 @@ RUN set -eux; \
 LABEL io.hass.version="${BUILD_VERSION}" \
       io.hass.type="app" \
       io.hass.arch="${BUILD_ARCH}" \
-      org.opencontainers.image.title="Music Assistant 2.9.9 with Yoto provider" \
+      org.opencontainers.image.title="Music Assistant 2.9.13 with Yoto provider" \
       org.opencontainers.image.version="${BUILD_VERSION}" \
-      org.opencontainers.image.base.digest="sha256:50666a6f8d7f87d53d993dc41860ab06dda11047f6e433bb5bdbcb6e309ac74c" \
+      org.opencontainers.image.base.digest="sha256:5ded610a2804fb7a973d2cbe390df09ceb67f0d7f603bcacd21ebaaa5a8a9b62" \
       org.opencontainers.image.source="https://github.com/m4rkireland/music-assistant-yoto"

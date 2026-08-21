@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.13-yoto.12
+
+- Update the immutable Music Assistant base from 2.9.9 to 2.9.13.
+- Restore Home Assistant playback through the Music Assistant integration by
+  including the upstream system-user permission fix for `auth/users`.
+
 ## 2.9.9-yoto.11
 
 - Upgrade to `yoto-api` 4.3.3, which natively preserves live card categories.
