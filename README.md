@@ -26,7 +26,7 @@ Music and unclassified cards remain albums with ordered tracks. Unknown categori
 
 ## Compatibility
 
-- Music Assistant Server `2.9.9`
+- Music Assistant Server `2.9.13`
 - Python `3.14`
 - `yoto-api==4.3.3`
 - Home Assistant add-on architectures: `amd64` and `aarch64`
@@ -72,9 +72,9 @@ Each synchronization refreshes the Yoto family library before importing albums, 
 
 ## Limitations
 
-- The provider is experimental and tested against Music Assistant `2.9.9`.
+- The provider is experimental and tested against Music Assistant `2.9.13`.
 - Media classification depends on Yoto's category metadata. Unknown categories remain albums.
-- Audiobook parts must report the same normalized format and channel layout. Cards with missing or incompatible stream properties are shown but marked unavailable because Music Assistant 2.9.9 cannot safely concatenate them.
+- Audiobook parts must report the same normalized format and channel layout. Cards with missing or incompatible stream properties are shown but marked unavailable because Music Assistant 2.9.13 cannot safely concatenate them.
 - Yoto's family-library and card-detail interfaces are not all covered by its public API reference and may change.
 - The browser callback URL must currently be copied back into Music Assistant to complete authentication.
 

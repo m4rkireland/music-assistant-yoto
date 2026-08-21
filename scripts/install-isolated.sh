@@ -13,8 +13,8 @@ if [[ "$MA_SERVER" == *"/addon_configs/"* || "$MA_SERVER" == *"/config/"* ]]; th
   echo "Refusing to install into a production/add-on path" >&2
   exit 1
 fi
-if [[ "$(git -C "$MA_SERVER" describe --tags --exact-match 2>/dev/null || true)" != "2.9.9" ]]; then
-  echo "The isolated source checkout must be exactly tag 2.9.9" >&2
+if [[ "$(git -C "$MA_SERVER" describe --tags --exact-match 2>/dev/null || true)" != "2.9.13" ]]; then
+  echo "The isolated source checkout must be exactly tag 2.9.13" >&2
   exit 1
 fi
 if [[ -e "$TARGET" && ! -L "$TARGET" ]]; then

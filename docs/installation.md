@@ -3,7 +3,7 @@
 ## Requirements
 
 - Home Assistant OS or a supervised Home Assistant installation
-- Music Assistant Server `2.9.9`
+- Music Assistant Server `2.9.13`
 - A Yoto OAuth client configured for Authorization Code with PKCE
 - A Yoto account with access to the family library
 
@@ -71,7 +71,7 @@ Uninstalling the add-on does not revoke Yoto authorization. Remove the Yoto prov
 Clone the matching Music Assistant source into `.music-assistant-server` at the repository root:
 
 ```bash
-git clone --depth 1 --branch 2.9.9 \
+git clone --depth 1 --branch 2.9.13 \
   https://github.com/music-assistant/server.git \
   .music-assistant-server
 
@@ -90,7 +90,7 @@ uv pip install \
 ./scripts/check.sh
 ```
 
-Set `MA_SERVER` to use another exact Music Assistant `2.9.9` checkout.
+Set `MA_SERVER` to use another exact Music Assistant `2.9.13` checkout.
 
 For an isolated server checkout, install or remove the provider symlink with:
 

@@ -1,6 +1,6 @@
 # Music Assistant Yoto
 
-An experimental Music Assistant `2.9.9` add-on containing the unofficial, read-only Yoto provider.
+An experimental Music Assistant `2.9.13` add-on containing the unofficial, read-only Yoto provider.
 
 ## Features
 
